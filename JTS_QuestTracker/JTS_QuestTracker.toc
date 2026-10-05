@@ -1,0 +1,32 @@
+## Interface: 16001, 120007
+## Title: |cff33ff99JTS Quest Tracker|r
+## Notes: A clean, customizable quest tracker for WoW Forever. James's own fork of Butter Quest Tracker (by Butter Cookie Kitkat, MIT license) with fixes and new features. Not affiliated with the original author.
+## Author: James
+## Category: JTS Suite
+## X-Suite: JTS Suite
+## Version: 1.0.0
+## X-Based-On: Butter Quest Tracker by Butter Cookie Kitkat (MIT) - https://github.com/butter-cookie-kitkat/ButterQuestTracker
+## X-License: MIT
+## OptionalDeps: Ace3, Questie
+## SavedVariables: JTS_QuestTrackerDB
+## IconTexture: Interface\AddOns\JTS_QuestTracker\Icon
+
+embeds.xml
+
+# Localization
+Locale\JTS_QuestTrackerLocale.lua
+Locale\enUS\locale.xml
+Locale\ruRU\locale.xml
+Locale\zhCN\locale.xml
+
+utilities\constants.lua
+
+JTS_QuestTracker.lua
+Options.lua
+Extras.lua
+Tags.lua
+ColorBlind.lua
+Media.lua
+Profiles.lua
+QuestItems.lua
+Minimap.lua
