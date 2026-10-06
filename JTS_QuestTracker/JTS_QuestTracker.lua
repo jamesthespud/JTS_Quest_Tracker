@@ -17,6 +17,11 @@ local function playSound(name)
     end
 end
 
+-- Which sections the player collapsed (saved per character, so they stay collapsed after a reload).
+local function collapsed()
+    return JQT.db.char.CollapsedSections;
+end
+
 local function count(t)
     local n = 0;
     for _ in pairs(t or {}) do n = n + 1 end
@@ -51,8 +56,6 @@ StaticPopupDialogs[NAME .. "_WowheadURL"] = {
 
 function JQT:OnEnable()
     self.db = LibStub("AceDB-3.0"):New("JTS_QuestTrackerDB", ns.CONSTANTS.DB_DEFAULTS, true);
-    self.hiddenContainers = {};
-
     -- Profiles, migration of older settings, import / export (Profiles.lua).
     if self.SetupProfiles then
         self:SetupProfiles();
@@ -556,7 +559,7 @@ function JQT:AddTrackerHeader(trackerContainer, visibleCount, questCount)
                 -- This fires only if OnTrackerDragStart doesn't fire.
                 OnTrackerMouseUp = function(button)
                     if button == "LeftButton" then
-                        self.hiddenContainers["QUESTS"] = self.questsContainer:ToggleHidden() or nil;
+                        collapsed()["QUESTS"] = self.questsContainer:ToggleHidden() or nil;
                         playSound("IG_MAINMENU_OPTION_CHECKBOX_ON");
                     else
                         self:ToggleOptions();
@@ -568,12 +571,12 @@ function JQT:AddTrackerHeader(trackerContainer, visibleCount, questCount)
 end
 
 -- A zone header (click to collapse) and the container its quests go in.
-function JQT:AddZone(zone)
+function JQT:AddZone(zone, questsInZone)
     local p = self.db.profile;
     local zoneContainer;
 
     self.tracker:Font({
-        label = zone,
+        label = p.ZoneHeaderQuestCount and (zone .. " (" .. questsInZone .. ")") or zone,
         color = p.ZoneHeaderFontColor,
         size = p.ZoneHeaderFontSize,
         container = self.tracker:Container({
@@ -582,7 +585,7 @@ function JQT:AddZone(zone)
             metadata = { header = true, zone = zone },
             events = {
                 OnMouseUp = function()
-                    self.hiddenContainers["Z-" .. zone] = zoneContainer:ToggleHidden() or nil;
+                    collapsed()["Z-" .. zone] = zoneContainer:ToggleHidden() or nil;
                     playSound("IG_MAINMENU_OPTION_CHECKBOX_ON");
                 end
             }
@@ -591,7 +594,7 @@ function JQT:AddZone(zone)
 
     zoneContainer = self.tracker:Container({
         container = self.questsContainer,
-        hidden = self.hiddenContainers["Z-" .. zone],
+        hidden = collapsed()["Z-" .. zone],
         margin = { left = 8 },
         metadata = { header = false, zone = zone }
     });
@@ -626,11 +629,12 @@ function JQT:AddQuest(quest, parent)
         container = questContainer
     });
 
-    local function line(text, color, progress)
+    local function line(text, color, progress, alpha)
         self.tracker:Font({
             label = ' - ' .. text,
             size = p.ObjectiveFontSize,
             color = color,
+            alpha = alpha,
             progress = progress,
             progressColor = progress and self:GetProgressColor(progress) or nil,
             container = questContainer,
@@ -665,7 +669,10 @@ function JQT:AddQuest(quest, parent)
             -- A bar only makes sense for objectives that count something (5/20), not "talk to X".
             local showBar = p.ObjectiveProgressBars and (tonumber(objective.required) or 0) > 1;
 
-            line(objective.text, color, showBar and progress or nil);
+            -- Finished objectives fade back (unless they are flashing because you just finished them).
+            local faded = p.FadeCompletedObjectives and objective.completed and not flashing;
+
+            line(objective.text, color, showBar and progress or nil, faded and 0.5 or nil);
         end
     end
 end
@@ -689,16 +696,20 @@ function JQT:RefreshView()
 
     self.questsContainer = self.tracker:Container({
         container = trackerContainer,
-        hidden = self.hiddenContainers["QUESTS"]
+        hidden = collapsed()["QUESTS"]
     });
     self.questContainers = {};
 
-    local zoneContainers = {};
+    local zoneContainers, questsPerZone = {}, {};
+    for _, quest in pairs(watchedQuests) do
+        questsPerZone[quest.zone] = (questsPerZone[quest.zone] or 0) + 1;
+    end
+
     for _, quest in pairs(watchedQuests) do
         local parent = self.questsContainer;
 
         if p.ZoneHeaderEnabled then
-            zoneContainers[quest.zone] = zoneContainers[quest.zone] or self:AddZone(quest.zone);
+            zoneContainers[quest.zone] = zoneContainers[quest.zone] or self:AddZone(quest.zone, questsPerZone[quest.zone]);
             parent = zoneContainers[quest.zone];
         end
 

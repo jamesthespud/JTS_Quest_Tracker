@@ -48,7 +48,7 @@ end
 
 -- Thin progress bar drawn along the bottom of the text (used for "5/20" style objectives).
 local BAR_HEIGHT = 3;
-local BAR_GAP = 2;
+local BAR_GAP = 5; -- space between the text and the bar (was 2 in 1.0.0)
 
 local function paint(texture, r, g, b, a)
     if texture.SetColorTexture then

@@ -106,6 +106,7 @@ function Frame:Font(options)
     font:SetProgress(options.progress, options.progressColor);
     font:SetLabel(options.label);
     font:SetSize(options.size or 12);
+    font:SetAlpha(options.alpha or 1);
 
     font:UpdateParentsHeight(font:GetFullHeight());
 

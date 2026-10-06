@@ -133,91 +133,89 @@ local function sortingChoices()
     return values, sorting;
 end
 
-local function filtersTab()
-    local sortValues, sortOrder = Choices(sortingChoices);
-
-    return O{ name = L('SETTINGS_FILTERS_AND_SORTING_TAB'), type = "group", args = {
-        autoTrackUpdatedQuests = O{ name = L('SETTINGS_AUTO_TRACK_UPDATED_QUESTS_NAME'), desc = L('SETTINGS_AUTO_TRACK_UPDATED_QUESTS_DESC'),
-            arg = "AutoTrackUpdatedQuests", type = "toggle", width = 1.6,
-            set = function(info, value) SetInDB(info, value); if not value then JQT:ResetOverrides() end end },
-        spacer0 = Spacer(0.8),
-
-        sorting = O{ name = L('SETTINGS_SORTING_NAME'), desc = L('SETTINGS_SORTING_DESC'), arg = "Sorting", type = "select",
-            values = sortValues, sorting = sortOrder,
-            set = function(info, value)
-                SetInDB(info, value);
-                JQT:UpdateQuestProximityTimer();
-                if value ~= "ByQuestProximity" then JQT:Sort() end
-            end },
-        spacer1 = Spacer(),
-
-        autoHideQuestHelperIcons = O{ name = L('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_NAME'),
-            desc = function() return JQTL:GetString('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_DESC', table.concat(QH:GetActiveAddons(), ", ")) end,
-            arg = "AutoHideQuestHelperIcons", type = "toggle", width = 1.6,
-            disabled = function() return not QH:IsSupported() end,
-            set = function(info, value) SetInDB(info, value); QH:SetAutoHideQuestHelperIcons(value); end },
-        spacer2 = Spacer(0.8),
-
-        filtersHeader = O{ name = "Filters", type = "header" },
-        spacer3 = Spacer(),
-
-        disableFilters = O{ name = L('SETTINGS_DISABLE_FILTERS_NAME'), desc = L('SETTINGS_DISABLE_FILTERS_DESC'),
-            arg = "DisableFilters", type = "toggle", width = 1.6,
-            set = function(info, value)
-                if value == false then JQT:ResetOverrides() end
-                SetAndRefreshQuestWatch(info, value);
-            end },
-        spacer4 = Spacer(),
-
-        currentZoneOnly = O{ name = L('SETTINGS_CURRENT_ZONE_ONLY_NAME'), desc = L('SETTINGS_CURRENT_ZONE_ONLY_DESC'),
-            arg = "CurrentZoneOnly", type = "toggle", width = 1.6, disabled = On("DisableFilters"), set = SetAndRefreshQuestWatch },
-        spacer5 = Spacer(),
-
-        hideCompletedQuests = O{ name = L('SETTINGS_HIDE_COMPLETED_QUESTS_NAME'), desc = L('SETTINGS_HIDE_COMPLETED_QUESTS_DESC'),
-            arg = "HideCompletedQuests", type = "toggle", width = 1.6, disabled = On("DisableFilters"), set = SetAndRefreshQuestWatch },
-        spacer6 = Spacer(),
-
-        reset = O{ name = L('SETTINGS_RESET_TRACKING_OVERRIDES_NAME'), desc = L('SETTINGS_RESET_TRACKING_OVERRIDES_DESC'),
-            type = "execute", width = 1.3, func = function() JQT:ResetOverrides() end },
-        spacerEnd = Spacer(nil, "large"),
-    } };
+-- A category in the sidebar.
+local function Category(name, order, args)
+    return { name = name, type = "group", order = order, args = args };
 end
 
-local function visualsTab()
-    local cbValues, cbOrder = Choices(function() return JQT:GetColorBlindModeValues() end);
+-- ---------------------------------------------------------------------------
+-- Tracking: what is shown and in which order
+-- ---------------------------------------------------------------------------
+
+local function trackingCategory()
+    local sortValues, sortOrder = Choices(sortingChoices);
+
+    return Category(L('SETTINGS_FILTERS_AND_SORTING_TAB'), 1, {
+        sortingGroup = Group("Sorting", {
+            sorting = O{ name = L('SETTINGS_SORTING_NAME'), desc = L('SETTINGS_SORTING_DESC'), arg = "Sorting", type = "select",
+                values = sortValues, sorting = sortOrder,
+                set = function(info, value)
+                    SetInDB(info, value);
+                    JQT:UpdateQuestProximityTimer();
+                    if value ~= "ByQuestProximity" then JQT:Sort() end
+                end },
+            zoneSorting = O{ name = "Zone Order",
+                desc = "Current zone first, then A-Z keeps the groups in a steady order. \"By quest order\" puts zones in the order of their first quest under your chosen sorting.",
+                arg = "ZoneSorting", type = "select", width = 1.5,
+                values = { CurrentThenAlphabetical = "Current zone first, then A-Z", ByQuestOrder = "By quest order" },
+                set = SetAndRefreshView, disabled = Off("ZoneHeaderEnabled") },
+            spacer1 = Spacer(),
+            autoHideQuestHelperIcons = O{ name = L('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_NAME'),
+                desc = function() return JQTL:GetString('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_DESC', table.concat(QH:GetActiveAddons(), ", ")) end,
+                arg = "AutoHideQuestHelperIcons", type = "toggle", width = 1.6,
+                disabled = function() return not QH:IsSupported() end,
+                set = function(info, value) SetInDB(info, value); QH:SetAutoHideQuestHelperIcons(value); end },
+        }),
+
+        filtersGroup = Group("Filters", {
+            autoTrackUpdatedQuests = O{ name = L('SETTINGS_AUTO_TRACK_UPDATED_QUESTS_NAME'), desc = L('SETTINGS_AUTO_TRACK_UPDATED_QUESTS_DESC'),
+                arg = "AutoTrackUpdatedQuests", type = "toggle", width = 1.6,
+                set = function(info, value) SetInDB(info, value); if not value then JQT:ResetOverrides() end end },
+            disableFilters = O{ name = L('SETTINGS_DISABLE_FILTERS_NAME'), desc = L('SETTINGS_DISABLE_FILTERS_DESC'),
+                arg = "DisableFilters", type = "toggle", width = 1.6,
+                set = function(info, value)
+                    if value == false then JQT:ResetOverrides() end
+                    SetAndRefreshQuestWatch(info, value);
+                end },
+            currentZoneOnly = O{ name = L('SETTINGS_CURRENT_ZONE_ONLY_NAME'), desc = L('SETTINGS_CURRENT_ZONE_ONLY_DESC'),
+                arg = "CurrentZoneOnly", type = "toggle", width = 1.6, disabled = On("DisableFilters"), set = SetAndRefreshQuestWatch },
+            hideCompletedQuests = O{ name = L('SETTINGS_HIDE_COMPLETED_QUESTS_NAME'), desc = L('SETTINGS_HIDE_COMPLETED_QUESTS_DESC'),
+                arg = "HideCompletedQuests", type = "toggle", width = 1.6, disabled = On("DisableFilters"), set = SetAndRefreshQuestWatch },
+            spacer1 = Spacer(),
+            reset = O{ name = L('SETTINGS_RESET_TRACKING_OVERRIDES_NAME'), desc = L('SETTINGS_RESET_TRACKING_OVERRIDES_DESC'),
+                type = "execute", width = 1.3, func = function() JQT:ResetOverrides() end },
+        }),
+    });
+end
+
+-- ---------------------------------------------------------------------------
+-- Appearance: text, headers, quest names and objectives
+-- ---------------------------------------------------------------------------
+
+local function appearanceCategory()
     local fontValues, fontOrder = Choices(function() return JQT:GetFontChoices() end);
 
-    return O{ name = "Visual Settings", type = "group", args = {
-        spacerStart = Spacer(),
+    return Category("Appearance", 2, {
+        previewGroup = Group("Preview", {
+            displayDummyData = O{ name = L('SETTINGS_DISPLAY_DUMMY_DATA_NAME'), desc = L('SETTINGS_DISPLAY_DUMMY_DATA_DESC'),
+                arg = "DisplayDummyData", type = "toggle", width = "full", set = SetAndRefreshView },
+        }),
 
-        backgroundAlwaysVisible = O{ name = L('SETTINGS_BACKGROUND_ALWAYS_VISIBLE_NAME'), desc = L('SETTINGS_BACKGROUND_ALWAYS_VISIBLE_DESC'),
-            arg = "BackgroundAlwaysVisible", type = "toggle", width = 2.3,
-            set = function(info, value)
-                SetInDB(info, value);
-                JQT.tracker:UpdateSettings({ backgroundVisible = JQT.db.profile.DeveloperMode or value });
-            end },
+        textStyleSettings = Group("Text", {
+            fontFace = O{ name = "Font",
+                desc = "The font used for all tracker text. Fonts from SharedMedia (or any addon that shares fonts with it) show up here too.",
+                arg = "FontFace", type = "select", width = 2.4, values = fontValues, sorting = fontOrder,
+                set = function(info, value) SetInDB(info, value); JQT:ApplyTextStyle(); JQT:RefreshView(); end },
+            spacer1 = Spacer(),
+            textOutline = O{ name = "Outline", desc = "Draws an outline around all tracker text. It helps when the tracker sits over a busy background.",
+                arg = "TextOutline", type = "select", width = 1.2,
+                values = { None = "None", Outline = "Outline", Thick = "Thick Outline" }, set = SetAndRefreshView },
+            textShadow = O{ name = "Shadow", desc = "\"Default\" keeps the game's own text shadow.",
+                arg = "TextShadow", type = "select", width = 1.2,
+                values = { Default = "Default", Strong = "Strong", Off = "Off" }, set = SetAndRefreshView },
+        }),
 
-        backgroundColor = O{ name = L('SETTINGS_BACKGROUND_COLOR_NAME'), desc = L('SETTINGS_BACKGROUND_COLOR_DESC'),
-            arg = "BackgroundColor", type = "color", hasAlpha = true, get = GetColor,
-            set = function(info, r, g, b, a)
-                SetColor(info, r, g, b, a);
-                JQT.tracker:UpdateSettings({ backgroundColor = JQT.db.profile.BackgroundColor });
-            end },
-
-        showScrollBar = O{ name = "Show Scroll Bar",
-            desc = "Shows a slim bar on the right edge of the tracker while you scroll with the mouse wheel, so you can see where you are in a long list. It fades away a moment after you stop, and only appears when there is something to scroll.",
-            arg = "ShowScrollBar", type = "toggle", width = 2.3, set = SetTracker("scrollBar") },
-
-        scrollBarOnHover = O{ name = "Keep Scroll Bar Visible on Hover",
-            desc = "Keeps the scroll bar up for as long as your mouse is over the tracker, so you can grab it and drag. Needs Show Scroll Bar.",
-            arg = "ScrollBarOnHover", type = "toggle", width = 2.3, set = SetTracker("scrollBarOnHover"), disabled = Off("ShowScrollBar") },
-
-        scrollSpeed = O{ name = "Scroll Speed",
-            desc = "How far the tracker moves for each notch of the mouse wheel, in pixels. Higher is faster. Default is 30.",
-            arg = "ScrollSpeed", type = "range", width = 1.6, min = 10, max = 100, step = 1, bigStep = 5, set = SetTracker("scrollSpeed") },
-        spacer1 = Spacer(),
-
-        trackerHeaderSettings = Group("Tracker Header Settings", {
+        trackerHeaderSettings = Group("Tracker Header", {
             enabled = O{ name = L('SETTINGS_ENABLED_NAME'), desc = L('SETTINGS_TRACKER_HEADER_ENABLED_DESC'),
                 arg = "TrackerHeaderEnabled", type = "toggle", set = SetAndRefreshView },
             spacer1 = Spacer(1.1),
@@ -238,26 +236,22 @@ local function visualsTab()
             fontColor = FontColor("TrackerHeaderFontColor", Off("TrackerHeaderEnabled")),
         }),
 
-        zoneHeaderSettings = Group("Zone Header Settings", {
+        zoneHeaderSettings = Group("Zone Headers", {
             enabled = O{ name = L('SETTINGS_ENABLED_NAME'), desc = L('SETTINGS_ZONE_HEADER_ENABLED_DESC'),
                 arg = "ZoneHeaderEnabled", type = "toggle", set = SetAndRefreshView },
-            zoneSorting = O{ name = "Zone Order",
-                desc = "Current zone first, then A-Z keeps the groups in a steady order. \"By quest order\" puts zones in the order of their first quest under your chosen sorting.",
-                arg = "ZoneSorting", type = "select", width = 1.5,
-                values = { CurrentThenAlphabetical = "Current zone first, then A-Z", ByQuestOrder = "By quest order" },
-                set = SetAndRefreshView, disabled = Off("ZoneHeaderEnabled") },
+            spacer1 = Spacer(1.1),
+            questCount = O{ name = "Show Quest Count", desc = "Shows how many tracked quests are in each zone, like Elwynn Forest (3).",
+                arg = "ZoneHeaderQuestCount", type = "toggle", width = 1.4, set = SetAndRefreshView, disabled = Off("ZoneHeaderEnabled") },
             spacer2 = Spacer(),
             fontSize = FontSize("ZoneHeaderFontSize", 24, Off("ZoneHeaderEnabled")),
             spacer3 = Spacer(1.1),
             fontColor = FontColor("ZoneHeaderFontColor", Off("ZoneHeaderEnabled")),
         }),
 
-        questHeaderSettings = Group("Quest Header Settings", {
-            questPadding = O{ name = L('SETTINGS_QUEST_PADDING_NAME'), arg = "QuestPadding", type = "range",
-                min = 0, max = 20, step = 1, set = SetAndRefreshView },
-            spacer1 = Spacer(1.1),
+        questHeaderSettings = Group("Quest Names", {
             format = O{ name = L('SETTINGS_FORMAT_NAME'), desc = L('SETTINGS_QUEST_HEADER_FORMAT_DESC'),
                 arg = "QuestHeaderFormat", type = "input", set = SetAndRefreshView },
+            spacer1 = Spacer(0.1),
             questLevel = O{ name = "Show Quest Level",
                 desc = "Adds the quest's level (the level it is meant for) to the quest name.\n\n|c00FF9696Before name|r: [12] Quest Name\n|c00FF9696After name|r: Quest Name (12)\n\nIgnored if your Format already contains {{level}}.",
                 arg = "QuestLevelDisplay", type = "select", width = 1.4,
@@ -275,9 +269,12 @@ local function visualsTab()
             fontColor = FontColor("QuestHeaderFontColor", On("ColorHeadersByDifficultyLevel")),
             spacer4 = Spacer(),
             fontSize = FontSize("QuestHeaderFontSize"),
+            spacer5 = Spacer(1.1),
+            questPadding = O{ name = L('SETTINGS_QUEST_PADDING_NAME'), arg = "QuestPadding", type = "range",
+                min = 0, max = 20, step = 1, set = SetAndRefreshView },
         }),
 
-        objectiveSettings = Group("Objective Settings", {
+        objectiveSettings = Group("Objectives", {
             fontSize = FontSize("ObjectiveFontSize"),
             spacer3 = Spacer(1.1),
             fontColor = FontColor("ObjectiveFontColor", On("ObjectiveColorByProgress")),
@@ -287,8 +284,21 @@ local function visualsTab()
                 arg = "ObjectiveColorByProgress", type = "toggle", width = 1.4, set = SetAndRefreshView },
             progressBars = O{ name = "Progress Bars", desc = "Draws a thin bar under objectives that count something, like 5/20.",
                 arg = "ObjectiveProgressBars", type = "toggle", width = 1.4, set = SetAndRefreshView },
+            fadeCompleted = O{ name = "Fade Finished Objectives",
+                desc = "Shows objectives you have already finished dimmer, so the ones still to do stand out.",
+                arg = "FadeCompletedObjectives", type = "toggle", width = 1.4, set = SetAndRefreshView },
         }),
+    });
+end
 
+-- ---------------------------------------------------------------------------
+-- Color blind mode
+-- ---------------------------------------------------------------------------
+
+local function colorBlindCategory()
+    local cbValues, cbOrder = Choices(function() return JQT:GetColorBlindModeValues() end);
+
+    return Category("Color Blind Mode", 3, {
         colorBlindSettings = Group("Color Blind Mode", {
             colorBlindMode = O{ name = "Color Blind Mode",
                 desc = "Swaps every color the tracker uses to show meaning (quest difficulty, objective progress, progress bars, Ready to Turn In, Failed and the complete flash) for colors that stay easy to tell apart with your type of color vision. Your own text colors are not changed.\n\nIf you use the game's own color blind filter, use that or this mode, not both.",
@@ -298,20 +308,15 @@ local function visualsTab()
                 arg = "DifficultyMarkers", type = "select", width = 1.2,
                 values = { Auto = "Auto", On = "On", Off = "Off" }, sorting = { "Auto", "On", "Off" }, set = SetAndRefreshView },
         }),
+    });
+end
 
-        textStyleSettings = Group("Text Style", {
-            textOutline = O{ name = "Outline", desc = "Draws an outline around all tracker text. It helps when the tracker sits over a busy background.",
-                arg = "TextOutline", type = "select", width = 1.2,
-                values = { None = "None", Outline = "Outline", Thick = "Thick Outline" }, set = SetAndRefreshView },
-            textShadow = O{ name = "Shadow", desc = "\"Default\" keeps the game's own text shadow.",
-                arg = "TextShadow", type = "select", width = 1.2,
-                values = { Default = "Default", Strong = "Strong", Off = "Off" }, set = SetAndRefreshView },
-            fontFace = O{ name = "Font",
-                desc = "The font used for all tracker text. Fonts from SharedMedia (or any addon that shares fonts with it) show up here too.",
-                arg = "FontFace", type = "select", width = 2.4, values = fontValues, sorting = fontOrder,
-                set = function(info, value) SetInDB(info, value); JQT:ApplyTextStyle(); JQT:RefreshView(); end },
-        }),
+-- ---------------------------------------------------------------------------
+-- Alerts
+-- ---------------------------------------------------------------------------
 
+local function alertsCategory()
+    return Category("Alerts", 4, {
         alertSettings = Group("Objective Complete Alert", {
             alertFlash = O{ name = "Flash", desc = "Briefly highlights a quest in the tracker when you finish one of its objectives.",
                 arg = "AlertFlash", type = "toggle", width = 0.8, set = SetInDB },
@@ -325,12 +330,14 @@ local function visualsTab()
             soundQuest = SoundPicker("SoundQuestComplete", "Quest Complete Sound", "Played when a whole quest is ready to turn in."),
             soundQuestPreview = SoundPreview("SoundQuestComplete"),
         }),
-
-        spacerEnd = Spacer(nil, "large"),
-    } };
+    });
 end
 
-local function frameTab()
+-- ---------------------------------------------------------------------------
+-- Window: position, size, background and scrolling
+-- ---------------------------------------------------------------------------
+
+local function windowCategory()
     -- Positions are saved as negative offsets from the top right corner, but shown as positive numbers.
     local function Position(arg, axis, max)
         return O{ name = L('SETTINGS_POSITION' .. axis:upper() .. '_NAME'), arg = arg, type = "range", width = 1.6,
@@ -344,99 +351,127 @@ local function frameTab()
 
     local defaults = ns.CONSTANTS.DB_DEFAULTS.profile;
 
-    return O{ name = L('SETTINGS_FRAME_TAB'), type = "group", args = {
-        lockFrame = O{ name = L('SETTINGS_LOCK_FRAME_NAME'), desc = L('SETTINGS_LOCK_FRAME_DESC'),
-            arg = "LockFrame", type = "toggle", set = SetTracker("locked") },
-        spacer0 = Spacer(),
-        positionX = Position("PositionX", "x", math.ceil(GetScreenWidth())),
-        positionY = Position("PositionY", "y", math.ceil(GetScreenHeight())),
-        spacer1 = Spacer(),
-        width = O{ name = L('SETTINGS_WIDTH_NAME'), arg = "Width", type = "range", width = 1.6,
-            min = 100, max = 400, step = 1, bigStep = 10, set = SetTracker("width") },
-        maxHeight = O{ name = L('SETTINGS_MAX_HEIGHT_NAME'), arg = "MaxHeight", type = "range", width = 1.6,
-            min = 100, max = math.ceil(GetScreenHeight() * UIParent:GetEffectiveScale()), step = 1, bigStep = 10,
-            set = SetTracker("maxHeight") },
-        spacer2 = Spacer(),
-        resetPosition = O{ name = L('SETTINGS_RESET_POSITION_NAME'), type = "execute", width = 0.8,
-            func = function()
-                local p = JQT.db.profile;
-                p.PositionX, p.PositionY = defaults.PositionX, defaults.PositionY;
-                JQT.tracker:UpdateSettings({ position = { x = p.PositionX, y = p.PositionY } });
-            end },
-        resetSize = O{ name = L('SETTINGS_RESET_SIZE_NAME'), type = "execute", width = 0.7,
-            func = function()
-                local p = JQT.db.profile;
-                p.Width, p.MaxHeight = defaults.Width, defaults.MaxHeight;
-                JQT.tracker:UpdateSettings({ width = p.Width, maxHeight = p.MaxHeight });
-            end },
-        spacerEnd = Spacer(nil, "large"),
-    } };
+    return Category(L('SETTINGS_FRAME_TAB'), 5, {
+        positionGroup = Group("Position & Size", {
+            lockFrame = O{ name = L('SETTINGS_LOCK_FRAME_NAME'), desc = L('SETTINGS_LOCK_FRAME_DESC'),
+                arg = "LockFrame", type = "toggle", set = SetTracker("locked") },
+            spacer0 = Spacer(),
+            positionX = Position("PositionX", "x", math.ceil(GetScreenWidth())),
+            positionY = Position("PositionY", "y", math.ceil(GetScreenHeight())),
+            spacer1 = Spacer(),
+            width = O{ name = L('SETTINGS_WIDTH_NAME'), arg = "Width", type = "range", width = 1.6,
+                min = 100, max = 400, step = 1, bigStep = 10, set = SetTracker("width") },
+            maxHeight = O{ name = L('SETTINGS_MAX_HEIGHT_NAME'), arg = "MaxHeight", type = "range", width = 1.6,
+                min = 100, max = math.ceil(GetScreenHeight() * UIParent:GetEffectiveScale()), step = 1, bigStep = 10,
+                set = SetTracker("maxHeight") },
+            spacer2 = Spacer(),
+            resetPosition = O{ name = L('SETTINGS_RESET_POSITION_NAME'), type = "execute", width = 0.8,
+                func = function()
+                    local p = JQT.db.profile;
+                    p.PositionX, p.PositionY = defaults.PositionX, defaults.PositionY;
+                    JQT.tracker:UpdateSettings({ position = { x = p.PositionX, y = p.PositionY } });
+                end },
+            resetSize = O{ name = L('SETTINGS_RESET_SIZE_NAME'), type = "execute", width = 0.7,
+                func = function()
+                    local p = JQT.db.profile;
+                    p.Width, p.MaxHeight = defaults.Width, defaults.MaxHeight;
+                    JQT.tracker:UpdateSettings({ width = p.Width, maxHeight = p.MaxHeight });
+                end },
+        }),
+
+        backgroundGroup = Group("Background", {
+            backgroundAlwaysVisible = O{ name = L('SETTINGS_BACKGROUND_ALWAYS_VISIBLE_NAME'), desc = L('SETTINGS_BACKGROUND_ALWAYS_VISIBLE_DESC'),
+                arg = "BackgroundAlwaysVisible", type = "toggle", width = 2.3,
+                set = function(info, value)
+                    SetInDB(info, value);
+                    JQT.tracker:UpdateSettings({ backgroundVisible = JQT.db.profile.DeveloperMode or value });
+                end },
+            backgroundColor = O{ name = L('SETTINGS_BACKGROUND_COLOR_NAME'), desc = L('SETTINGS_BACKGROUND_COLOR_DESC'),
+                arg = "BackgroundColor", type = "color", hasAlpha = true, get = GetColor,
+                set = function(info, r, g, b, a)
+                    SetColor(info, r, g, b, a);
+                    JQT.tracker:UpdateSettings({ backgroundColor = JQT.db.profile.BackgroundColor });
+                end },
+        }),
+
+        scrollGroup = Group("Scrolling", {
+            showScrollBar = O{ name = "Show Scroll Bar",
+                desc = "Shows a slim bar on the right edge of the tracker while you scroll with the mouse wheel, so you can see where you are in a long list. It fades away a moment after you stop, and only appears when there is something to scroll.",
+                arg = "ShowScrollBar", type = "toggle", width = 2.3, set = SetTracker("scrollBar") },
+            scrollBarOnHover = O{ name = "Keep Scroll Bar Visible on Hover",
+                desc = "Keeps the scroll bar up for as long as your mouse is over the tracker, so you can grab it and drag. Needs Show Scroll Bar.",
+                arg = "ScrollBarOnHover", type = "toggle", width = 2.3, set = SetTracker("scrollBarOnHover"), disabled = Off("ShowScrollBar") },
+            scrollSpeed = O{ name = "Scroll Speed",
+                desc = "How far the tracker moves for each notch of the mouse wheel, in pixels. Higher is faster. Default is 30.",
+                arg = "ScrollSpeed", type = "range", width = 1.6, min = 10, max = 100, step = 1, bigStep = 5, set = SetTracker("scrollSpeed") },
+        }),
+    });
 end
 
-local function advancedTab()
-    return O{ name = L('SETTINGS_ADVANCED_TAB'), type = "group", args = {
-        developerOptionsHeader = O{ name = L('SETTINGS_DEVELOPER_HEADER'), type = "header" },
-        spacer1 = Spacer(),
-        developerMode = O{ name = L('SETTINGS_DEVELOPER_MODE_NAME'), desc = L('SETTINGS_DEVELOPER_MODE_DESC'),
-            arg = "DeveloperMode", type = "toggle",
-            set = function(info, value)
-                SetAndRefreshView(info, value);
-                JQT.tracker:UpdateSettings({ backgroundVisible = JQT.db.profile.BackgroundAlwaysVisible or value });
-            end },
-        spacer2 = Spacer(),
-        debugLevel = O{ name = L('SETTINGS_DEBUG_LEVEL_NAME'), desc = "ERROR = 1\nWARN = 2\nINFO = 3\nTRACE = 4",
-            arg = "DebugLevel", type = "range", min = 1, max = 4, step = 1, disabled = Off("DeveloperMode") },
-        spacer3 = Spacer(),
+-- ---------------------------------------------------------------------------
+-- Advanced: language, developer tools and reset
+-- ---------------------------------------------------------------------------
 
-        localeHeader = O{ name = L('SETTINGS_LOCALE_HEADER'), type = "header" },
-        spacer4 = Spacer(),
-        locale = O{ name = L('SETTINGS_LOCALE_NAME'), type = "select", style = "dropdown",
-            values = { enUS = "English", ruRU = "русский", zhCN = "简体中文" },
-            get = function() return JQTL:GetLocale() end,
-            set = function(_, locale)
-                JQT.db.profile.Locale = locale;
-                JQTL:SetLocale(locale);
-                JQT:RefreshView();
-            end },
-        spacer5 = Spacer(),
+local function advancedCategory()
+    return Category(L('SETTINGS_ADVANCED_TAB'), 2000, {
+        localeGroup = Group(L('SETTINGS_LOCALE_HEADER'), {
+            locale = O{ name = L('SETTINGS_LOCALE_NAME'), type = "select", style = "dropdown",
+                values = { enUS = "English", ruRU = "русский", zhCN = "简体中文" },
+                get = function() return JQTL:GetLocale() end,
+                set = function(_, locale)
+                    JQT.db.profile.Locale = locale;
+                    JQTL:SetLocale(locale);
+                    JQT:RefreshView();
+                end },
+        }),
 
-        resetHeader = O{ name = L('SETTINGS_RESET_HEADER'), type = "header" },
-        spacer6 = Spacer(),
-        resetDescription = O{ name = L('SETTINGS_RESET_TEXT'), type = "description", fontSize = "medium" },
-        spacer7 = Spacer(),
-        reset = O{ name = L('SETTINGS_RESET_NAME'), desc = L('SETTINGS_RESET_DESC'), type = "execute", width = 1.0,
-            func = function()
-                JQT.db:ResetProfile();
+        developerGroup = Group(L('SETTINGS_DEVELOPER_HEADER'), {
+            developerMode = O{ name = L('SETTINGS_DEVELOPER_MODE_NAME'), desc = L('SETTINGS_DEVELOPER_MODE_DESC'),
+                arg = "DeveloperMode", type = "toggle",
+                set = function(info, value)
+                    SetAndRefreshView(info, value);
+                    JQT.tracker:UpdateSettings({ backgroundVisible = JQT.db.profile.BackgroundAlwaysVisible or value });
+                end },
+            spacer1 = Spacer(0.2),
+            debugLevel = O{ name = L('SETTINGS_DEBUG_LEVEL_NAME'), desc = "ERROR = 1\nWARN = 2\nINFO = 3\nTRACE = 4",
+                arg = "DebugLevel", type = "range", min = 1, max = 4, step = 1, disabled = Off("DeveloperMode") },
+        }),
 
-                for k, v in pairs(ns.CONSTANTS.DB_DEFAULTS.char) do
-                    JQT.db.char[k] = type(v) == "table" and {} or v;
-                end
+        resetGroup = Group(L('SETTINGS_RESET_HEADER'), {
+            resetDescription = O{ name = L('SETTINGS_RESET_TEXT'), type = "description", fontSize = "medium" },
+            reset = O{ name = L('SETTINGS_RESET_NAME'), desc = L('SETTINGS_RESET_DESC'), type = "execute", width = 1.0,
+                func = function()
+                    JQT.db:ResetProfile();
 
-                JQT:SetTrackerHidden(JQT.db.char.TrackerHidden);
-                JQT:ApplyAllSettings();
-            end },
+                    for k, v in pairs(ns.CONSTANTS.DB_DEFAULTS.char) do
+                        JQT.db.char[k] = type(v) == "table" and {} or v;
+                    end
+
+                    JQT:SetTrackerHidden(JQT.db.char.TrackerHidden);
+                    JQT:ApplyAllSettings();
+                end },
+        }),
+
         spacer8 = Spacer(),
-
         advert = O{ name = L('SETTINGS_ADVERT_TEXT'), type = "description", fontSize = "medium" },
-        spacerEnd = Spacer(nil, "large"),
-    } };
+    });
 end
 
 LibStub("AceConfig-3.0"):RegisterOptionsTable("JTS_QuestTracker", function()
     local options = {
         name = function() return JQTL:GetString('SETTINGS_NAME', ns.CONSTANTS.VERSION) end,
         type = "group",
-        childGroups = "tab",
+        childGroups = "tree", -- categories in a sidebar, like Blizzard's own options
         get = GetFromDB,
         set = SetInDB,
 
         args = {
-            displayDummyData = O{ name = L('SETTINGS_DISPLAY_DUMMY_DATA_NAME'), desc = L('SETTINGS_DISPLAY_DUMMY_DATA_DESC'),
-                arg = "DisplayDummyData", type = "toggle", set = SetAndRefreshView },
-            filtersAndSorting = filtersTab(),
-            visuals = visualsTab(),
-            frameSettings = frameTab(),
-            advanced = advancedTab(),
+            tracking = trackingCategory(),
+            appearance = appearanceCategory(),
+            colorBlind = colorBlindCategory(),
+            alerts = alertsCategory(),
+            window = windowCategory(),
+            advanced = advancedCategory(),
         }
     };
 

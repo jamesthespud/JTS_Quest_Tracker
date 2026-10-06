@@ -26,14 +26,15 @@ grouped, how it looks and where it sits on screen.
 - **Zone grouping.** Quests sit under collapsible zone headers. Your current zone comes first, the rest follow A to Z.
 - **Show Quest Level.** Optionally show `[12] Quest Name` or `Quest Name (12)`.
 - **Clearer difficulty colors** and **no tracking limit**.
-- **Color Blind Mode.** Covers every type of color vision deficiency: protanopia, protanomaly, deuteranopia, deuteranomaly, tritanopia, tritanomaly, achromatopsia, blue cone monochromacy and achromatomaly. It swaps the difficulty, progress, progress bar, turn-in, failed and flash colors for palettes checked with a color vision simulation. Optional **Difficulty Markers** (`!!` `!` `-` `--`) show difficulty without relying on color, and switch on by themselves in the no-color modes. Visual Settings > Color Blind Mode.
-- **Quest item buttons.** Quests that give you an item to use get a button beside them: click to use, Shift-click to link it. Shows charges, cooldown and a range dot. Buttons tab.
-- **Quest tags.** `[E]` Elite, `[G3]` Group of 3, `[D]` Dungeon, `[R]` Raid, `[PvP]`, `[H]` Heroic, `[L]` Legendary after the quest name, or the full words. Visual Settings > Quest Header Settings.
-- **Font picker.** Choose the game's fonts or any SharedMedia font. Visual Settings > Text Style.
+- **Color Blind Mode.** Covers every type of color vision deficiency: protanopia, protanomaly, deuteranopia, deuteranomaly, tritanopia, tritanomaly, achromatopsia, blue cone monochromacy and achromatomaly. It swaps the difficulty, progress, progress bar, turn-in, failed and flash colors for palettes checked with a color vision simulation. Optional **Difficulty Markers** (`!!` `!` `-` `--`) show difficulty without relying on color, and switch on by themselves in the no-color modes. Settings: Color Blind Mode.
+- **Quest item buttons.** Quests that give you an item to use get a button beside them: click to use, Shift-click to link it. Shows charges, cooldown and a range dot. Settings: Buttons.
+- **Quest tags.** `[E]` Elite, `[G3]` Group of 3, `[D]` Dungeon, `[R]` Raid, `[PvP]`, `[H]` Heroic, `[L]` Legendary after the quest name, or the full words. Settings: Appearance > Quest Names.
+- **Font picker.** Choose the game's fonts or any SharedMedia font. Settings: Appearance > Text.
 - **Alert sounds.** Pick separate sounds for "objective complete" and "quest complete" (game sounds or SharedMedia sounds), with a Play button to preview.
 - **Minimap button.** Left-click for settings, right-click to show/hide the tracker, drag to move. Works with minimap button bags and Titan Panel/ElvUI data bars when LibDBIcon is present. `/jtsqt minimap` shows or hides it.
-- **Profiles.** Every setting lives in a profile. All characters share "Default" until you choose otherwise; on the Profiles tab you can switch, copy, create, reset or delete profiles, so a layout made on one character loads on any other.
+- **Profiles.** Every setting lives in a profile. All characters share "Default" until you choose otherwise; on the Profiles page you can switch, copy, create, reset or delete profiles, so a layout made on one character loads on any other.
 - **Import / export.** Turn your profile into one line of text to share or back up, and paste someone else's to load it (into your current profile or a new one).
+- **Easy to scan.** Finished objectives fade back, zone headers show how many quests they hold (`Elwynn Forest (3)`), and collapsed zones stay collapsed after a reload.
 - **Safer startup.** If the tracker ever fails to start, you get Blizzard's default tracker back instead of none.
 - **Bug fixes** for quest names containing `%`, quests without objectives looking "updated", a broken locale fallback, moved popup fields and stale quest log indexes.
 
@@ -94,6 +95,10 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **1.0.1** Finished objectives fade back so the ones still to do stand out. Zone headers show a quest count, like
+  `Elwynn Forest (3)`. Collapsed zones (and a collapsed tracker) stay collapsed after a reload or relog. The progress
+  bar sits 3 pixels lower, clear of the objective text. Settings are now grouped into categories in a sidebar:
+  Filters & Sorting, Appearance, Color Blind Mode, Alerts, Frame Settings, Buttons, Profiles and Advanced.
 - **1.0.0** First release. Forked from the Butter Quest Tracker WoW Forever fan update (1.4.0) and extended with:
   adjustable scroll speed, bigger zone headers, WoW Forever's 40 quest limit in the header, Color Blind Mode for all
   nine types of color vision deficiency with Difficulty Markers, quest item buttons, quest tags, a font picker,
@@ -107,5 +112,4 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 - JTS Quest Tracker fork and changes: (c) 2026 James, released under the same MIT license. See [`LICENSE`](LICENSE),
   which keeps the original copyright notice as the MIT license requires.
 - Bundled libraries keep their own licenses: Ace3 including AceDBOptions and AceSerializer (see [`Libs/Ace3-LICENSE.txt`](Libs/Ace3-LICENSE.txt)), LibStub and CallbackHandler.
-- "Butter Quest Tracker" is the original author's name for their addon; it is used here only to credit the source of this fork.# JTS_Quest_Tracker
-A Quest Tracking addon for World of Warcraft Forever
+- "Butter Quest Tracker" is the original author's name for their addon; it is used here only to credit the source of this fork.

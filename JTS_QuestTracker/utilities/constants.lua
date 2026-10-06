@@ -87,6 +87,8 @@ CONSTANTS.DB_DEFAULTS = {
 
         ObjectiveColorByProgress = false,
         ObjectiveProgressBars = true,
+        FadeCompletedObjectives = true,
+        ZoneHeaderQuestCount = true,
         TextOutline = "Outline",
         TextShadow = "Default",
         ColorBlindMode = "Off",
@@ -119,6 +121,7 @@ CONSTANTS.DB_DEFAULTS = {
         MANUALLY_TRACKED_QUESTS = {},
         QUESTS_LAST_UPDATED = {},
         PINNED_QUESTS = {},
+        CollapsedSections = {},  -- "QUESTS" (whole tracker) and "Z-<zone>" -> true when collapsed
         TrackerHidden = false
     }
 };
