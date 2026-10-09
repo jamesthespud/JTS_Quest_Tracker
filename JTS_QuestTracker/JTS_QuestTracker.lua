@@ -75,7 +75,7 @@ function JQT:GetTrackerSettings()
         maxHeight = p.MaxHeight,
         backgroundColor = p.BackgroundColor,
         backgroundVisible = p.BackgroundAlwaysVisible or p.DeveloperMode,
-        locked = p.LockFrame,
+        locked = self:IsTrackerLocked(),
         scrollBar = p.ShowScrollBar,
         scrollBarOnHover = p.ScrollBarOnHover,
         scrollSpeed = p.ScrollSpeed
@@ -102,15 +102,28 @@ function JQT:Initialize()
 
     JQTL:SetLocale(JQT.db.profile.Locale);
 
+    -- Tracking changes made while handling a quest update are drawn right away by that handler,
+    -- so the watch helper's report of them (a moment later) doesn't need a second redraw.
+    self.watchChangesDrawn = {};
+
     -- The player tracked or untracked a quest in Blizzard's quest log: remember it as their choice.
     QWH:OnQuestWatchUpdated(function(updates)
-        for _, update in pairs(updates) do
+        local redraw = false;
+
+        for questID, update in pairs(updates) do
             if update.byUser then
                 self.db.char.MANUALLY_TRACKED_QUESTS[update.questID] = update.watched and true or false;
+                redraw = true;
+            elseif self.watchChangesDrawn[questID] then
+                self.watchChangesDrawn[questID] = nil;
+            else
+                redraw = true;
             end
         end
 
-        self:RefreshView();
+        if redraw then
+            self:RefreshView();
+        end
     end);
 
     QLH:OnQuestUpdated(function(quests)
@@ -130,6 +143,9 @@ function JQT:Initialize()
                 char.QUESTS_LAST_UPDATED[questID] = nil;
                 char.MANUALLY_TRACKED_QUESTS[questID] = nil;
                 char.PINNED_QUESTS[questID] = nil;
+
+                -- The watch helper has already dropped it; the redraw below shows that.
+                self.watchChangesDrawn[questID] = true;
             elseif quest.accepted or quest.updated then
                 char.QUESTS_LAST_UPDATED[questID] = quest.lastUpdated;
 
@@ -140,7 +156,9 @@ function JQT:Initialize()
                     char.MANUALLY_TRACKED_QUESTS[questID] = nil;
                 end
 
-                self:UpdateQuestWatch(currentZone, minimapZone, QLH:GetQuest(questID));
+                if self:UpdateQuestWatch(currentZone, minimapZone, QLH:GetQuest(questID)) then
+                    self.watchChangesDrawn[questID] = true;
+                end
             end
         end
 
@@ -179,6 +197,39 @@ function JQT:Initialize()
 end
 
 JQT:RegisterEvent("PLAYER_ENTERING_WORLD", "OnPlayerEnteringWorld");
+
+-- ---------------------------------------------------------------------------
+-- Locking (by hand, and automatically during combat)
+-- ---------------------------------------------------------------------------
+
+function JQT:IsTrackerLocked()
+    local p = self.db.profile;
+
+    return p.LockFrame or (p.LockInCombat and InCombatLockdown()) or false;
+end
+
+function JQT:ApplyLock()
+    if self.tracker then
+        self.tracker:UpdateSettings({ locked = self:IsTrackerLocked() });
+    end
+end
+
+-- Combat starts: drop the tracker if it is being dragged, and lock it.
+JQT:RegisterEvent("PLAYER_REGEN_DISABLED", function()
+    if not JQT.tracker then return end
+
+    if JQT.trackerMoving and JQT.db.profile.LockInCombat then
+        JQT.trackerMoving = false;
+        JQT.tracker:StopMovingOrSizing();
+        JQT.db.profile.PositionX, JQT.db.profile.PositionY = JQT.tracker:GetPosition();
+    end
+
+    JQT:ApplyLock();
+end);
+
+JQT:RegisterEvent("PLAYER_REGEN_ENABLED", function()
+    JQT:ApplyLock();
+end);
 
 function JQT:ShowWowheadPopup(id)
     local quest = QLH:GetQuest(id);
@@ -224,16 +275,6 @@ local function sortQuests(quest, otherQuest)
     local sorting = JQT.db.profile.Sorting or "nil";
     if sorting == "Disabled" then return compareBy(quest, otherQuest) end
 
-    if sorting == "ByQuestProximity" then
-        if QH:IsSupported() then
-            -- No known distance stays nil, which sorts the quest last.
-            quest.distance = QH:GetDistanceToClosestObjective(quest.questID);
-            otherQuest.distance = QH:GetDistanceToClosestObjective(otherQuest.questID);
-        else
-            quest.distance, otherQuest.distance = 0, 0;
-        end
-    end
-
     local rule = SORT_BY[sorting];
     if rule then return compareBy(quest, otherQuest, rule[1], rule[2]) end
 
@@ -275,6 +316,21 @@ function JQT:Sort()
     local quests = self:GetQuestInfo();
     local keys = {};
     for k in pairs(quests) do keys[#keys + 1] = k end
+
+    -- Distances are expensive (Questie searches every objective location), so look each one up
+    -- once per sort instead of once per comparison. No known distance stays nil and sorts last.
+    if self.db.profile.Sorting == "ByQuestProximity" then
+        local supported = QH:IsSupported();
+
+        for _, quest in pairs(quests) do
+            if supported then
+                quest.distance = QH:GetDistanceToClosestObjective(quest.questID);
+            else
+                quest.distance = 0;
+            end
+        end
+    end
+
     table.sort(keys, function(a, b) return sortQuests(quests[a], quests[b]) end);
 
     local questOrder, zoneOrder = {}, {};
@@ -341,8 +397,9 @@ function JQT:RefreshQuestWatch()
     end
 end
 
+-- Returns true when the quest's tracked state changed.
 function JQT:UpdateQuestWatch(currentZone, minimapZone, quest)
-    QWH:SetWatched(quest, self:ShouldWatchQuest(currentZone, minimapZone, quest));
+    return QWH:SetWatched(quest, self:ShouldWatchQuest(currentZone, minimapZone, quest));
 end
 
 -- Untrack a quest by hand (shift click / context menu) and remember that it was the player's choice.
@@ -482,14 +539,67 @@ function JQT:GetQuestHeader(quest)
     return format;
 end
 
+-- Hovering a quest: its level and type, summary, every objective with its count, and what clicks do.
 local function showQuestTooltip(quest, target)
     local H, N = HIGHLIGHT_FONT_COLOR, NORMAL_FONT_COLOR;
-    local function pair(left, right) GameTooltip:AddDoubleLine(left, right, H.r, H.g, H.b, H.r, H.g, H.b) end
+    local function pair(left, right, l, r)
+        l, r = l or H, r or H;
+        GameTooltip:AddDoubleLine(left, right, l.r, l.g, l.b, r.r, r.g, r.b);
+    end
 
     GameTooltip:SetOwner(target, "ANCHOR_NONE");
     GameTooltip:SetPoint("RIGHT", target, "LEFT");
-    GameTooltip:AddLine(quest.title .. "\n", N.r, N.g, N.b, true);
-    GameTooltip:AddLine(quest.summary or "", H.r, H.g, H.b, true);
+    GameTooltip:AddLine(quest.title, N.r, N.g, N.b, true);
+
+    -- "Level 18 · Dungeon", the level in its difficulty color (Color Blind Mode aware).
+    local details = {};
+    if tonumber(quest.level) and quest.level > 0 then
+        local c = JQT:GetDifficultyColor(quest.difficulty);
+        details[#details + 1] = string.format("|cff%02x%02x%02xLevel %d|r", c.r * 255, c.g * 255, c.b * 255, quest.level);
+    end
+
+    local okTag, tag = pcall(JQT.GetQuestTag, JQT, quest);
+    local tagText = okTag and tag and JQT:FormatQuestTag(tag, "Full"):match("^ %((.*)%)$");
+    if tagText then details[#details + 1] = tagText end
+
+    if #details > 0 then
+        GameTooltip:AddLine(table.concat(details, "  ·  "), H.r, H.g, H.b);
+    end
+
+    if quest.summary and quest.summary ~= "" then
+        GameTooltip:AddLine(" ");
+        GameTooltip:AddLine(quest.summary, H.r, H.g, H.b, true);
+    end
+
+    local grey = { r = 0.5, g = 0.5, b = 0.5 };
+
+    if quest.completed then
+        GameTooltip:AddLine(" ");
+        local c = JQT:GetStatusColor("complete");
+        GameTooltip:AddLine(JQTL:GetString('QT_READY_TO_TURN_IN'), c.r, c.g, c.b);
+    elseif quest.failed then
+        GameTooltip:AddLine(" ");
+        local c = JQT:GetStatusColor("failed");
+        GameTooltip:AddLine(JQTL:GetString('QT_FAILED'), c.r, c.g, c.b);
+    elseif quest.objectives and #quest.objectives > 0 then
+        GameTooltip:AddLine(" ");
+
+        for _, objective in ipairs(quest.objectives) do
+            local color = objective.completed and grey or H;
+            -- "Diseased Timber Wolf slain: 3/8" -> left "Diseased Timber Wolf slain", right "3/8"
+            local name, progress = (objective.text or ""):match("^(.-):%s*(%d+%s*/%s*%d+)$");
+
+            if name then
+                pair(name, progress, color, color);
+            else
+                GameTooltip:AddLine(objective.text or "", color.r, color.g, color.b, true);
+            end
+        end
+    end
+
+    GameTooltip:AddLine(" ");
+    GameTooltip:AddLine("Click: open in quest log   Right-click: menu", grey.r, grey.g, grey.b);
+    GameTooltip:AddLine("Shift: untrack   Ctrl: link in chat   Alt: Wowhead", grey.r, grey.g, grey.b);
 
     if JQT.db.profile.DeveloperMode then
         pair("\nQuest ID:", quest.questID);
@@ -533,11 +643,17 @@ function JQT:AddTrackerHeader(trackerContainer, visibleCount, questCount)
             margin = { bottom = 10 },
             events = {
                 OnMouseDown = function(button)
-                    if button == "LeftButton" and not p.LockFrame then self.tracker:StartMoving() end
+                    if button == "LeftButton" and not self:IsTrackerLocked() then
+                        self.trackerMoving = true;
+                        self.tracker:StartMoving();
+                    end
                 end,
 
                 OnMouseUp = function(button)
-                    if button == "LeftButton" and not p.LockFrame then self.tracker:StopMovingOrSizing() end
+                    if button == "LeftButton" and self.trackerMoving then
+                        self.trackerMoving = false;
+                        self.tracker:StopMovingOrSizing();
+                    end
                 end,
 
                 OnTrackerDragStart = function()

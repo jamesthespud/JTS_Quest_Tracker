@@ -89,6 +89,7 @@ function Frame:Container(options)
         end
     end
 
+    container:SetLocked(self.locked);
     container:UpdateParentsHeight(container:GetFullHeight());
     container:SetHidden(options.hidden);
     container:SetMetadata(options.metadata);

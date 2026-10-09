@@ -90,7 +90,8 @@ function JQT:ApplyTextStyle()
     JTS_QuestTrackerFont.textStyle = {
         flags = outline,
         shadow = shadow,
-        face = self.GetFontPath and self:GetFontPath() or nil
+        face = self.GetFontPath and self:GetFontPath() or nil,
+        barHeight = self.db.profile.ProgressBarHeight
     };
 end
 

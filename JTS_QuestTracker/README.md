@@ -19,7 +19,7 @@ grouped, how it looks and where it sits on screen.
 - **Pin quests.** Right-click a quest > Pin Quest. Pinned quests are always tracked, ignore the zone filter and sit first in their zone, marked with a small icon.
 - **Objective complete alert.** When an objective (or a whole quest) is finished the quest flashes briefly. Optional chat message and sound.
 - **Objective colors by progress.** Objectives shade from red to yellow to green as you get closer to done.
-- **Thin progress bars.** Optional slim bar under counted objectives such as 3/10.
+- **Thin progress bars.** Optional slim bar under counted objectives such as 3/10, 2 to 6 pixels thick.
 - **Text outline and shadow.** Choose no outline, outline or thick outline, and default, strong or no shadow.
 - **Show/hide command and key binding.** `/jtsqt toggle`, `/jtsqt show`, `/jtsqt hide`, or bind a key under Esc > Options > Key Bindings > AddOns.
 - **Draggable scroll bar**, optionally visible while the mouse is over the tracker, and an adjustable **Scroll Speed** for the mouse wheel.
@@ -34,6 +34,8 @@ grouped, how it looks and where it sits on screen.
 - **Minimap button.** Left-click for settings, right-click to show/hide the tracker, drag to move. Works with minimap button bags and Titan Panel/ElvUI data bars when LibDBIcon is present. `/jtsqt minimap` shows or hides it.
 - **Profiles.** Every setting lives in a profile. All characters share "Default" until you choose otherwise; on the Profiles page you can switch, copy, create, reset or delete profiles, so a layout made on one character loads on any other.
 - **Import / export.** Turn your profile into one line of text to share or back up, and paste someone else's to load it (into your current profile or a new one).
+- **Helpful tooltips.** Hover a quest to see its level (in its difficulty color), its type, its summary and every objective with its count, plus what each click does.
+- **Lock in Combat.** The tracker can't be dragged while you fight (on by default; Frame Settings > Position & Size).
 - **Easy to scan.** Finished objectives fade back, zone headers show how many quests they hold (`Elwynn Forest (3)`), and collapsed zones stay collapsed after a reload.
 - **Safer startup.** If the tracker ever fails to start, you get Blizzard's default tracker back instead of none.
 - **Bug fixes** for quest names containing `%`, quests without objectives looking "updated", a broken locale fallback, moved popup fields and stale quest log indexes.
@@ -95,6 +97,12 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **1.0.2** Progress bar thickness setting (2 to 6 pixels). Lock in Combat, on by default: the tracker can't be
+  dragged during a fight, and is dropped in place if combat starts mid-drag. Richer quest tooltip: level, quest
+  type, summary, each objective with its count, and click hints. Fixed: with Lock Frame on, a tiny mouse movement
+  while clicking the header could stop it from collapsing the tracker. Faster: a burst of quest log updates (the game
+  sends several per kill) is read once instead of once each, accepting or turning in a quest redraws the tracker once
+  instead of twice, and sorting by proximity looks each distance up once per sort (about 10x fewer lookups).
 - **1.0.1** Finished objectives fade back so the ones still to do stand out. Zone headers show a quest count, like
   `Elwynn Forest (3)`. Collapsed zones (and a collapsed tracker) stay collapsed after a reload or relog. The progress
   bar sits 3 pixels lower, clear of the objective text. Settings are now grouped into categories in a sidebar:

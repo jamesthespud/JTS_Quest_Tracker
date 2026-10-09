@@ -79,6 +79,7 @@ CONSTANTS.DB_DEFAULTS = {
         -- Frame Settings
 
         LockFrame = false,
+        LockInCombat = true,
         ShowScrollBar = true,
         ScrollBarOnHover = false,
         ScrollSpeed = 30,
@@ -87,6 +88,7 @@ CONSTANTS.DB_DEFAULTS = {
 
         ObjectiveColorByProgress = false,
         ObjectiveProgressBars = true,
+        ProgressBarHeight = 3,
         FadeCompletedObjectives = true,
         ZoneHeaderQuestCount = true,
         TextOutline = "Outline",

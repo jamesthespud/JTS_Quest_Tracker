@@ -47,7 +47,13 @@ function Font:OnAcquire()
 end
 
 -- Thin progress bar drawn along the bottom of the text (used for "5/20" style objectives).
-local BAR_HEIGHT = 3;
+local BAR_HEIGHT = 3; -- default thickness; the Progress Bar Thickness option overrides it
+
+local function barHeight()
+    local style = JTS_QuestTrackerFont.textStyle;
+
+    return (style and tonumber(style.barHeight)) or BAR_HEIGHT;
+end
 local BAR_GAP = 5; -- space between the text and the bar (was 2 in 1.0.0)
 
 local function paint(texture, r, g, b, a)
@@ -59,7 +65,7 @@ local function paint(texture, r, g, b, a)
 end
 
 function Font:_barExtra()
-    return self.progress ~= nil and (BAR_HEIGHT + BAR_GAP) or 0;
+    return self.progress ~= nil and (barHeight() + BAR_GAP) or 0;
 end
 
 function Font:_textHeight()
@@ -102,18 +108,20 @@ function Font:SetProgress(fraction, color)
         self.barTrack = self:CreateTexture(nil, "ARTWORK");
         self.barTrack:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0);
         self.barTrack:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 0);
-        self.barTrack:SetHeight(BAR_HEIGHT);
         paint(self.barTrack, 1, 1, 1, 0.15);
 
         self.barFill = self:CreateTexture(nil, "OVERLAY");
         self.barFill:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0);
-        self.barFill:SetHeight(BAR_HEIGHT);
 
         -- The width of the fill depends on how wide the text row ends up being.
         self:SetScript("OnSizeChanged", function(row)
             row:_layoutBar();
         end);
     end
+
+    -- Pooled rows keep their textures, so apply the current thickness every time.
+    self.barTrack:SetHeight(barHeight());
+    self.barFill:SetHeight(barHeight());
 
     color = color or { r = 1, g = 0.85, b = 0.2 };
     paint(self.barFill, color.r or 1, color.g or 1, color.b or 1, 0.95);

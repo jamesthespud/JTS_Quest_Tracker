@@ -316,4 +316,16 @@ function helper:ToggleQuest(questID)
     return true;
 end
 
-AceEvent.RegisterEvent(helper, "QUEST_LOG_UPDATE", "Refresh");
+-- The game often fires QUEST_LOG_UPDATE several times in a row (4 times for a single kill, and often
+-- when nothing quest related changed at all). Read the log once, on the next frame, for the whole burst.
+local refreshScheduled = false;
+
+AceEvent.RegisterEvent(helper, "QUEST_LOG_UPDATE", function()
+    if refreshScheduled then return end
+    refreshScheduled = true;
+
+    C_Timer.After(0, function()
+        refreshScheduled = false;
+        helper:Refresh();
+    end);
+end);
