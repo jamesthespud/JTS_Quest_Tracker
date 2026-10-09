@@ -599,6 +599,7 @@ local function showQuestTooltip(quest, target)
 
     GameTooltip:AddLine(" ");
     GameTooltip:AddLine("Click: open in quest log   Right-click: menu", grey.r, grey.g, grey.b);
+    GameTooltip:AddLine("Middle-click: focus (map arrow)", grey.r, grey.g, grey.b);
     GameTooltip:AddLine("Shift: untrack   Ctrl: link in chat   Alt: Wowhead", grey.r, grey.g, grey.b);
 
     if JQT.db.profile.DeveloperMode then
@@ -616,7 +617,10 @@ end
 
 -- What a click on a quest does.
 function JQT:OnQuestClicked(quest, button)
-    if button ~= "LeftButton" then
+    if button == "MiddleButton" then
+        -- Focus: the quest WoW's built-in arrow and map waypoint point to (Focus.lua).
+        self:ToggleFocus(quest);
+    elseif button ~= "LeftButton" then
         self:ToggleContextMenu(quest);
     elseif IsShiftKeyDown() then
         playSound("IG_MAINMENU_OPTION_CHECKBOX_ON");
@@ -850,6 +854,7 @@ function JQT:ShowContextMenu(quest)
 
     MenuUtil.CreateContextMenu(UIParent, function(_, root)
         root:CreateTitle(quest.title);
+        root:CreateButton(self:GetFocusMenuLabel(questID), function() self:ToggleFocus(quest) end);
         root:CreateButton(JQTL:GetString(self:IsPinned(questID) and 'QT_UNPIN_QUEST' or 'QT_PIN_QUEST'), function()
             self:SetPinned(quest, not self:IsPinned(questID));
         end);

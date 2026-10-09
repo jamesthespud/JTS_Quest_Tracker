@@ -34,6 +34,7 @@ grouped, how it looks and where it sits on screen.
 - **Minimap button.** Left-click for settings, right-click to show/hide the tracker, drag to move. Works with minimap button bags and Titan Panel/ElvUI data bars when LibDBIcon is present. `/jtsqt minimap` shows or hides it.
 - **Profiles.** Every setting lives in a profile. All characters share "Default" until you choose otherwise; on the Profiles page you can switch, copy, create, reset or delete profiles, so a layout made on one character loads on any other.
 - **Import / export.** Turn your profile into one line of text to share or back up, and paste someone else's to load it (into your current profile or a new one).
+- **Quest focus.** Point WoW's built-in quest helper (the on-screen arrow with distance, the map waypoint and the highlighted objective area) at any quest: middle-click it, or use Focus in its right-click menu. The focused quest is marked in the tracker, and optional Auto-focus follows the quest you just progressed or accepted. Settings: Filters & Sorting > Quest Focus.
 - **Helpful tooltips.** Hover a quest to see its level (in its difficulty color), its type, its summary and every objective with its count, plus what each click does.
 - **Lock in Combat.** The tracker can't be dragged while you fight (on by default; Frame Settings > Position & Size).
 - **Easy to scan.** Finished objectives fade back, zone headers show how many quests they hold (`Elwynn Forest (3)`), and collapsed zones stay collapsed after a reload.
@@ -75,7 +76,8 @@ All libraries (Ace3) are bundled, nothing else needs installing.
 | Right-click the header | Open the settings |
 | Click a quest | Open it in the quest log |
 | Shift-click / Alt-click / Ctrl-click a quest | Untrack / Wowhead link / link in chat |
-| Right-click a quest | Quest menu (pin, view, share, abandon) |
+| Middle-click a quest | Focus it: WoW's quest arrow and map waypoint point to it (click again to stop) |
+| Right-click a quest | Quest menu (focus, pin, view, share, abandon) |
 
 ## Reporting bugs
 
@@ -97,6 +99,10 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **1.1.0** Quest focus: middle-click a quest, or choose Focus in its right-click menu, to point WoW Forever's
+  built-in quest helper at it (on-screen arrow with distance, map waypoint, highlighted objective area). The
+  focused quest is marked in the tracker, and it stays in sync when you focus a quest from the quest map. Optional
+  Auto-focus (off by default) focuses the quest you just accepted or made progress on.
 - **1.0.2** Progress bar thickness setting (2 to 6 pixels). Lock in Combat, on by default: the tracker can't be
   dragged during a fight, and is dropped in place if combat starts mid-drag. Richer quest tooltip: level, quest
   type, summary, each objective with its count, and click hints. Fixed: with Lock Frame on, a tiny mouse movement

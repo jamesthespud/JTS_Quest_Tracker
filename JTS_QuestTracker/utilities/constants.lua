@@ -80,6 +80,8 @@ CONSTANTS.DB_DEFAULTS = {
 
         LockFrame = false,
         LockInCombat = true,
+        ShowFocusMarker = true,
+        AutoFocusQuest = false,
         ShowScrollBar = true,
         ScrollBarOnHover = false,
         ScrollSpeed = 30,

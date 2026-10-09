@@ -167,6 +167,12 @@ local function trackingCategory()
                 set = function(info, value) SetInDB(info, value); QH:SetAutoHideQuestHelperIcons(value); end },
         }),
 
+        focusGroup = JQT.focusOptions and (function()
+            local group = JQT.focusOptions();
+            group.order = 1000000; -- after Sorting and Filters
+            return group;
+        end)() or nil,
+
         filtersGroup = Group("Filters", {
             autoTrackUpdatedQuests = O{ name = L('SETTINGS_AUTO_TRACK_UPDATED_QUESTS_NAME'), desc = L('SETTINGS_AUTO_TRACK_UPDATED_QUESTS_DESC'),
                 arg = "AutoTrackUpdatedQuests", type = "toggle", width = 1.6,
