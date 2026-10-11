@@ -106,6 +106,7 @@ CONSTANTS.DB_DEFAULTS = {
         QuestItemSide = "Left",
         MinimapIcon = { hide = false, minimapPos = 200 },
         AlertChat = false,
+        AlertParty = false,
         AlertSound = false,
         AlertFlash = true,
         PositionX = -42.67,

@@ -17,7 +17,7 @@ grouped, how it looks and where it sits on screen.
 
 - **Made for WoW Forever.** Built for Forever's modern quest API (it does not support other WoW clients).
 - **Pin quests.** Right-click a quest > Pin Quest. Pinned quests are always tracked, ignore the zone filter and sit first in their zone, marked with a small icon.
-- **Objective complete alert.** When an objective (or a whole quest) is finished the quest flashes briefly. Optional chat message and sound.
+- **Objective complete alert.** When an objective (or a whole quest) is finished the quest flashes briefly. Optional chat message, sound and **party announce** (tells your group in party chat, like Questie does, for groups where not everyone runs Questie; off by default).
 - **Objective colors by progress.** Objectives shade from red to yellow to green as you get closer to done.
 - **Thin progress bars.** Optional slim bar under counted objectives such as 3/10, 2 to 6 pixels thick.
 - **Text outline and shadow.** Choose no outline, outline or thick outline, and default, strong or no shadow.
@@ -99,6 +99,10 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **1.2.0** Announce to Party (off by default; Alerts > Objective Complete Alert): when you finish an objective
+  or a whole quest, your group sees it in party chat, like Questie's announce, e.g.
+  `{rt1} JTS QT: Diseased Timber Wolf slain: 8/8 (Wolves Across the Border)`. Uses instance chat in dungeon
+  finder groups and sends nothing when you're solo.
 - **1.1.0** Quest focus: middle-click a quest, or choose Focus in its right-click menu, to point WoW Forever's
   built-in quest helper at it (on-screen arrow with distance, map waypoint, highlighted objective area). The
   focused quest is marked in the tracker, and it stays in sync when you focus a quest from the quest map. Optional

@@ -4,7 +4,7 @@ local _, ns = ...
     Optional extras for JTS Quest Tracker. Everything in here is switched by a setting
     and keeps working (or quietly does nothing) when the game lacks a function it would like to use.
 
-    - objective complete alerts (chat line / sound / flash)
+    - objective complete alerts (chat line / party announce / sound / flash)
     - objective colors by progress
     - text outline and shadow
     - pinned quests
@@ -178,6 +178,73 @@ local function startFlash(questID)
     end);
 end
 
+-- ---------------------------------------------------------------------------
+-- Party announce (like Questie's), for groups where not everyone runs Questie
+-- ---------------------------------------------------------------------------
+
+local PARTY_PREFIX = "{rt1} JTS QT: ";
+
+-- Chat sends can't carry color codes or texture escapes.
+local function plain(text)
+    return (tostring(text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|A.-|a", ""):gsub("|T.-|t", ""));
+end
+
+-- PARTY in a normal group (in a raid that is your own subgroup), INSTANCE_CHAT in a group made by the
+-- dungeon finder. Nothing when solo.
+local function partyChannel()
+    if not IsInGroup then return nil end
+
+    local home = LE_PARTY_CATEGORY_HOME or 1;
+    local instance = LE_PARTY_CATEGORY_INSTANCE or 2;
+
+    if IsInGroup(home) then return "PARTY" end
+    if IsInGroup(instance) then return "INSTANCE_CHAT" end
+
+    return nil;
+end
+
+local function inChatLockdown()
+    local check = C_ChatInfo and C_ChatInfo.InChatMessagingLockdown;
+    if not check then return false end
+
+    local ok, locked = pcall(check);
+
+    return ok and locked == true;
+end
+
+local function sendChat(message, channel)
+    local send = (C_ChatInfo and C_ChatInfo.SendChatMessage) or SendChatMessage;
+    if not send then return end
+
+    pcall(send, message, channel);
+end
+
+-- The same line is never sent twice within a few seconds (some quests report a change twice).
+local recentlySent = {};
+
+function JQT:AnnounceToParty(event)
+    local channel = partyChannel();
+    if not channel or inChatLockdown() then return end
+
+    local title = plain(event.quest.title);
+    local message;
+
+    if event.complete then
+        message = PARTY_PREFIX .. title .. " is ready to turn in";
+    else
+        message = PARTY_PREFIX .. plain(event.text) .. " (" .. title .. ")";
+    end
+
+    -- Chat lines are limited to 255 characters.
+    message = message:sub(1, 255);
+
+    local now = GetTime and GetTime() or time();
+    if recentlySent[message] and now - recentlySent[message] < 5 then return end
+    recentlySent[message] = now;
+
+    sendChat(message, channel);
+end
+
 -- `events` is a list of { quest = <quest>, text = <what to say>, complete = <whole quest done> }.
 function JQT:Alert(events)
     if #events == 0 then return end
@@ -187,6 +254,12 @@ function JQT:Alert(events)
     if settings.AlertChat then
         for _, event in ipairs(events) do
             say("|cff4aa854" .. event.quest.title .. "|r: " .. event.text);
+        end
+    end
+
+    if settings.AlertParty then
+        for _, event in ipairs(events) do
+            self:AnnounceToParty(event);
         end
     end
 
