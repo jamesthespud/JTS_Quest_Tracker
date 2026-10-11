@@ -3,7 +3,7 @@ local Compat = LibStub("JTSQTCompat-1.0");
 local ZH = LibStub("JTSQTZoneHelper-1.0");
 local QLH = LibStub("JTSQTQuestLogHelper-1.0");
 local QWH = LibStub("JTSQTQuestWatchHelper-1.0");
-local helper = LibStub:NewLibrary("JTSQTQuestHelpers-1.0", 2);
+local helper = LibStub:NewLibrary("JTSQTQuestHelpers-1.0", 3);
 if not helper then return end
 
 local timers = {};
@@ -161,13 +161,23 @@ function helper:SetIconsVisibility(updatedQuest)
 end
 
 local function getDistanceToClosestObjective(self, questID, overrideAddon)
+    local addons = self:GetAddons();
+
+    -- WoW's own quest helper first: it is cheap and is what the on-screen quest arrow shows.
+    -- Questie fills in quests the game has no location for.
+    if addons["Built-In"] and (not overrideAddon or overrideAddon == "Built-In") then
+        local distance = QLH:GetQuest(questID) and Compat:GetBuiltInQuestDistance(questID);
+
+        if distance or overrideAddon == "Built-In" then
+            return distance or nil;
+        end
+    end
+
     local player = getWorldPlayerPosition();
 
     if not player then
         return nil;
     end
-
-    local addons = self:GetAddons();
 
     local coordinates = {};
     if addons.Questie and (not overrideAddon or overrideAddon == "Questie") then
@@ -217,10 +227,8 @@ local function getDistanceToClosestObjective(self, questID, overrideAddon)
                 end
             end
         end
-    elseif addons["Built-In"] and (not overrideAddon or overrideAddon == "Built-In") then
-        local quest = QLH:GetQuest(questID);
-
-        return quest and Compat:GetBuiltInQuestDistance(questID, quest.index) or nil;
+    else
+        return nil;
     end
 
     -- TODO: Find a way to avoid needing the quest object from the log...

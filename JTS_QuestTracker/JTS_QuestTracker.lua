@@ -175,9 +175,8 @@ function JQT:Initialize()
     self:ApplyTextStyle();
     pcall(self.SnapshotObjectives, self);
 
-    if self.db.char.TrackerHidden then
-        self.tracker:Hide();
-    end
+    -- Hidden by hand, in combat or in an instance (Visibility.lua).
+    self:UpdateVisibility();
 
     self.db.char.QUESTS_LAST_UPDATED = QLH:SetQuestsLastUpdated(self.db.char.QUESTS_LAST_UPDATED);
 
@@ -271,6 +270,14 @@ local function sortQuests(quest, otherQuest)
     -- Pinned quests always come first (within their zone when zone headers are on).
     local pinned, otherPinned = JQT:IsPinned(quest.questID), JQT:IsPinned(otherQuest.questID);
     if pinned ~= otherPinned then return pinned end
+
+    -- Ready to Turn In quests can go first or last (after pinned quests).
+    local placement = JQT.db.profile.TurnInPlacement;
+    if (placement == "Top" or placement == "Bottom") and (quest.completed and true) ~= (otherQuest.completed and true) then
+        if placement == "Top" then return quest.completed == true end
+
+        return otherQuest.completed == true;
+    end
 
     local sorting = JQT.db.profile.Sorting or "nil";
     if sorting == "Disabled" then return compareBy(quest, otherQuest) end
@@ -453,12 +460,13 @@ local function sampleQuests()
     return {
         -- Partially completed
         [6563] = sampleQuest(1, 6563, "The Essence of Aku'Mai", "Blackfathom Deeps", 22, 0.25,
-            { objectives = { sampleObjective("Sapphire of Aku'Mai: 5/20", 5, 20) } }),
+            { objectives = { sampleObjective("Sapphire of Aku'Mai: 5/20", 5, 20) }, sampleDistance = 85 }),
         -- No objectives, summary only
         [1196] = sampleQuest(2, 1196, "The Sacred Flame", "Thunder Bluff", 29, 1,
             { summary = "Deliver the Filled Etched Phial to Rau Cliffrunner at the Freewind Post." }),
         -- Multiple objectives, partially completed
-        [4841] = sampleQuest(3, 4841, "Pacify the Centaur", "Thousand Needles", 25, 0.5714, { objectives = {
+        -- Timed (shows "Time left")
+        [4841] = sampleQuest(3, 4841, "Pacify the Centaur", "Thousand Needles", 25, 0.5714, { sampleTimeLeft = 754, sampleDistance = 240, objectives = {
             sampleObjective("Galak Scout slain: 0/12", 0, 12),
             sampleObjective("Galak Wrangler slain: 10/10", 10, 10),
             sampleObjective("Galak Windchaser slain: 6/6", 6, 6)
@@ -681,6 +689,9 @@ function JQT:AddTrackerHeader(trackerContainer, visibleCount, questCount)
                     if button == "LeftButton" then
                         collapsed()["QUESTS"] = self.questsContainer:ToggleHidden() or nil;
                         playSound("IG_MAINMENU_OPTION_CHECKBOX_ON");
+                    elseif self.ShowTrackerMenu then
+                        -- Collapse / expand all, share quests, settings (Headers.lua).
+                        self:ShowTrackerMenu();
                     else
                         self:ToggleOptions();
                     end
@@ -704,7 +715,12 @@ function JQT:AddZone(zone, questsInZone)
             margin = { bottom = 10, left = 2 },
             metadata = { header = true, zone = zone },
             events = {
-                OnMouseUp = function()
+                OnMouseUp = function(button)
+                    if button == "RightButton" and self.ShowZoneMenu then
+                        self:ShowZoneMenu(zone);
+                        return;
+                    end
+
                     collapsed()["Z-" .. zone] = zoneContainer:ToggleHidden() or nil;
                     playSound("IG_MAINMENU_OPTION_CHECKBOX_ON");
                 end
@@ -741,13 +757,18 @@ function JQT:AddQuest(quest, parent)
 
     local flashing = self:IsFlashing(quest.questID);
 
-    self.tracker:Font({
+    questContainer.headerFont = self.tracker:Font({
         label = self:GetQuestHeader(quest),
         size = p.QuestHeaderFontSize,
         color = flashing and self:GetStatusColor("flash")
             or (p.ColorHeadersByDifficultyLevel and self:GetDifficultyColor(quest.difficulty) or p.QuestHeaderFontColor),
         container = questContainer
     });
+
+    -- "Time left: 4:32" for timed quests (Timers.lua).
+    if self.AddQuestTimer then
+        self:AddQuestTimer(quest, questContainer);
+    end
 
     local function line(text, color, progress, alpha)
         self.tracker:Font({

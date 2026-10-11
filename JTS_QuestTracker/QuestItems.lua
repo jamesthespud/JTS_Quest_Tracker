@@ -265,6 +265,15 @@ function JQT:LayoutQuestItems()
     dirty = false;
 end
 
+-- Follows the tracker when it fades in combat (alpha is allowed on secure buttons in combat).
+function JQT:SetQuestItemAlpha(alpha)
+    self.questItemAlpha = alpha;
+
+    for _, button in ipairs(buttons) do
+        pcall(button.SetAlpha, button, alpha);
+    end
+end
+
 -- ---------------------------------------------------------------------------
 -- Keeping them up to date
 -- ---------------------------------------------------------------------------

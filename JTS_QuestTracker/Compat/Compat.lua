@@ -9,7 +9,7 @@
     Run `/jtsqt status` in game to see what was found.
 ]]
 
-local Compat = LibStub:NewLibrary("JTSQTCompat-1.0", 2);
+local Compat = LibStub:NewLibrary("JTSQTCompat-1.0", 3);
 if not Compat then return end
 
 local _G = _G;
@@ -250,12 +250,18 @@ function Compat:HasBuiltInQuestDistance()
     return type(Q("GetDistanceSqToQuest")) == "function";
 end
 
+-- Yards to the quest's next objective (or its turn-in), as WoW's own quest arrow measures it.
+-- nil when the game has no location for it, or it is on another continent.
 function Compat:GetBuiltInQuestDistance(questID)
-    local squared = try(Q("GetDistanceSqToQuest"), questID);
+    local squared, onContinent = try(Q("GetDistanceSqToQuest"), questID);
 
-    if type(squared) == "number" and squared >= 0 then
-        return math.sqrt(squared);
-    end
+    if onContinent == false then return nil end
+
+    local ok, yards = pcall(function()
+        if type(squared) == "number" and squared >= 0 then return math.sqrt(squared) end
+    end);
+
+    return ok and yards or nil;
 end
 
 -- ---------------------------------------------------------------------------

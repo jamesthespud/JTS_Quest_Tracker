@@ -8,7 +8,7 @@ local _, ns = ...
     - objective colors by progress
     - text outline and shadow
     - pinned quests
-    - show / hide the tracker (/jtsqt toggle and the key binding)
+    - the key binding names (showing and hiding the tracker lives in Visibility.lua)
 ]]
 
 local JQT = JTS_QuestTracker;
@@ -321,47 +321,6 @@ function JQT:CheckObjectiveAlerts(updates)
     end
 
     self:Alert(events);
-end
-
--- ---------------------------------------------------------------------------
--- Show / hide the tracker
--- ---------------------------------------------------------------------------
-
-function JQT:SetTrackerHidden(hidden)
-    hidden = hidden and true or false;
-
-    self.db.char.TrackerHidden = hidden;
-
-    if self.tracker then
-        if hidden then
-            self.tracker:Hide();
-        else
-            self.tracker:Show();
-        end
-    end
-end
-
-function JQT:IsTrackerHidden()
-    return self.db ~= nil and self.db.char.TrackerHidden == true;
-end
-
-function JQT:ToggleTrackerVisibility()
-    if not self.tracker then return end
-
-    local hidden = not self:IsTrackerHidden();
-
-    self:SetTrackerHidden(hidden);
-
-    if hidden then
-        say("Tracker hidden. Type /jtsqt toggle (or use your key binding) to show it again.");
-    else
-        say("Tracker shown.");
-    end
-end
-
--- Used by Bindings.xml
-function JTS_QuestTracker_Toggle()
-    JQT:ToggleTrackerVisibility();
 end
 
 BINDING_HEADER_JTS_QUESTTRACKER = "JTS Quest Tracker";

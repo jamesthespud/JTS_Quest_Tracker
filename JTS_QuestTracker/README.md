@@ -37,6 +37,13 @@ grouped, how it looks and where it sits on screen.
 - **Quest focus.** Point WoW's built-in quest helper (the on-screen arrow with distance, the map waypoint and the highlighted objective area) at any quest: middle-click it, or use Focus in its right-click menu. The focused quest is marked in the tracker, and optional Auto-focus follows the quest you just progressed or accepted. Settings: Filters & Sorting > Quest Focus.
 - **Helpful tooltips.** Hover a quest to see its level (in its difficulty color), its type, its summary and every objective with its count, plus what each click does.
 - **Lock in Combat.** The tracker can't be dragged while you fight (on by default; Frame Settings > Position & Size).
+- **Hide in combat or instances.** Fade the tracker or hide it while you fight, and hide it in dungeons, raids, or battlegrounds and arenas. Showing it by hand keeps it up until the fight ends or you leave. Settings: Frame Settings > Visibility.
+- **Collapse All / Expand All.** Right-click the tracker header or a zone header, or use `/jtsqt collapse` and `/jtsqt expand`. Optional **Expand Current Zone Only** opens your zone and folds the others away as you travel.
+- **Quest log full warning.** When your log is nearly full the header adds `Log 37/40`, and `Log full` at 40 (Appearance > Tracker Header, warns from 36 by default).
+- **Ready to Turn In placement.** Put finished quests first or last instead of wherever your sorting puts them (Filters & Sorting > Sorting).
+- **Quest timers.** Timed quests show `Time left: 4:32` under their name, counting down and turning red in the last minute.
+- **Distance without Questie.** Sort by Quest Proximity now uses WoW Forever's own quest helper (the same distance its quest arrow shows), with Questie only filling in quests the game has no location for. Optional **Show Distance** puts `120 yd` after each quest name (Appearance > Quest Names).
+- **Share quests with your group.** Right-click the tracker header for Share All Quests, or a zone header to share just that zone's quests (`/jtsqt share` too). They go out one every 3 seconds so your group can take each one.
 - **Easy to scan.** Finished objectives fade back, zone headers show how many quests they hold (`Elwynn Forest (3)`), and collapsed zones stay collapsed after a reload.
 - **Safer startup.** If the tracker ever fails to start, you get Blizzard's default tracker back instead of none.
 - **Bug fixes** for quest names containing `%`, quests without objectives looking "updated", a broken locale fallback, moved popup fields and stale quest log indexes.
@@ -47,7 +54,7 @@ grouped, how it looks and where it sits on screen.
 - Collapsible zone headers
 - Filter quests to your current zone or subzone
 - Manually track or untrack quests
-- Sort by level, percent complete, recently updated, or quest proximity (needs Questie)
+- Sort by level, percent complete, recently updated, or quest proximity
 - Color quest names by difficulty and optionally show their level
 - Adjust font size, colors, padding and the quest name format
 - Alt-click a quest for its Wowhead link, ctrl-click to link it in chat, shift-click to untrack it
@@ -69,11 +76,14 @@ All libraries (Ace3) are bundled, nothing else needs installing.
 | --- | --- |
 | `/jtsqt` | Open the settings (also in Esc > Options > AddOns) |
 | `/jtsqt toggle` | Show or hide the tracker (also `show`, `hide`, or the key binding) |
+| `/jtsqt collapse` / `/jtsqt expand` | Collapse or expand every zone |
+| `/jtsqt share` | Share all your quests with your group |
 | `/jtsqt minimap` | Show or hide the minimap button |
 | `/jtsqt status` | Print which game APIs were found (include this in bug reports) |
 | `/jtsqt reset` | Clear your manual track and untrack choices |
 | Left-click the header | Collapse or expand the tracker |
-| Right-click the header | Open the settings |
+| Right-click the header | Menu: Collapse All, Expand All, Share All Quests, Hide Tracker, Settings |
+| Right-click a zone header | Menu: Share This Zone's Quests, Collapse All, Expand All |
 | Click a quest | Open it in the quest log |
 | Shift-click / Alt-click / Ctrl-click a quest | Untrack / Wowhead link / link in chat |
 | Middle-click a quest | Focus it: WoW's quest arrow and map waypoint point to it (click again to stop) |
@@ -93,12 +103,17 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   (`/dump (select(4, GetBuildInfo()))` in game).
 - A quest, map or UI function is renamed or removed: fix it in `Compat/Compat.lua`. Every Blizzard quest, map and
   UI call goes through that file, wrapped so one missing function can't break the rest.
-- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`) so the core tracker stays as close to the original design as possible.
+- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`) so the core tracker stays as close to the original design as possible.
 - All internal libraries are registered under `JTSQT*` names and all globals start with `JTS_QuestTracker`, so this
   addon can be installed next to Butter Quest Tracker without the two overwriting each other.
 
 ## Version history
 
+- **1.2.5** Hide in combat (fade or hide) and in dungeons, raids, or battlegrounds and arenas. Collapse All /
+  Expand All and Expand Current Zone Only. Quest log full warning in the header. Ready to Turn In quests first or
+  last. Countdown for timed quests. Quest distances from WoW's own quest helper, so Sort by Quest Proximity works
+  without Questie, plus optional distance after quest names. Share all quests, or one zone's, with your group.
+  Right-click menus on the tracker and zone headers.
 - **1.2.0** Announce to Party (off by default; Alerts > Objective Complete Alert): when you finish an objective
   or a whole quest, your group sees it in party chat, like Questie's announce, e.g.
   `{rt1} JTS QT: Diseased Timber Wolf slain: 8/8 (Wolves Across the Border)`. Uses instance chat in dungeon

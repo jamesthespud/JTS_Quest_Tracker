@@ -25,8 +25,12 @@ local function Spacer(width, size)
     return O{ type = "description", name = " ", fontSize = size or "small", width = width or "full" };
 end
 
-local function Group(name, args)
-    return O{ name = name, type = "group", inline = true, args = args };
+local function Group(name, args, extra)
+    local group = O{ name = name, type = "group", inline = true, args = args };
+
+    for key, option in pairs(extra or {}) do args[key] = option end
+
+    return group;
 end
 
 local function GetFromDB(info)
@@ -104,6 +108,28 @@ local function SoundPreview(arg)
         func = function() JQT:PlaySoundChoice(JQT.db.profile[arg]) end, disabled = Off("AlertSound") };
 end
 
+-- Options that live in another file (Headers.lua, Timers.lua, ...). `source` is the name of a function
+-- on JQT returning one option or a table of them; missing files are skipped.
+local function Extra(source)
+    local builder = JQT[source];
+    if type(builder) ~= "function" then return {} end
+
+    local ok, result = pcall(builder);
+    if not ok or type(result) ~= "table" then return {} end
+
+    if result.type then result = { [source] = result } end
+
+    local keys = {};
+    for key in pairs(result) do keys[#keys + 1] = key end
+    table.sort(keys, function(a, b) return (result[a].order or 0) < (result[b].order or 0) or
+        ((result[a].order or 0) == (result[b].order or 0) and a < b) end);
+
+    local args = {};
+    for _, key in ipairs(keys) do args[key] = O(result[key]) end
+
+    return args;
+end
+
 -- Other files add their own tabs with JQT:AddOptionsTab(key, builder).
 JQT.optionsTabs = JQT.optionsTabs or {};
 
@@ -159,6 +185,11 @@ local function trackingCategory()
                 arg = "ZoneSorting", type = "select", width = 1.5,
                 values = { CurrentThenAlphabetical = "Current zone first, then A-Z", ByQuestOrder = "By quest order" },
                 set = SetAndRefreshView, disabled = Off("ZoneHeaderEnabled") },
+            turnInPlacement = O{ name = "Ready to Turn In",
+                desc = "Where quests that are ready to turn in go.\n\n|cffffffffSorted|r: wherever your sorting puts them.\n|cffffffffFirst|r: at the top (of their zone, with zone headers on).\n|cffffffffLast|r: at the bottom.\n\nPinned quests always come first.",
+                arg = "TurnInPlacement", type = "select", width = 1.0,
+                values = { Normal = "Sorted", Top = "First", Bottom = "Last" }, sorting = { "Normal", "Top", "Bottom" },
+                set = function(info, value) SetInDB(info, value); JQT:Sort(); end },
             spacer1 = Spacer(),
             autoHideQuestHelperIcons = O{ name = L('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_NAME'),
                 desc = function() return JQTL:GetString('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_DESC', table.concat(QH:GetActiveAddons(), ", ")) end,
@@ -240,7 +271,8 @@ local function appearanceCategory()
             fontSize = FontSize("TrackerHeaderFontSize", 20, Off("TrackerHeaderEnabled")),
             spacer3 = Spacer(1.1),
             fontColor = FontColor("TrackerHeaderFontColor", Off("TrackerHeaderEnabled")),
-        }),
+            spacer4 = Spacer(),
+        }, Extra("logWarningOptions")),
 
         zoneHeaderSettings = Group("Zone Headers", {
             enabled = O{ name = L('SETTINGS_ENABLED_NAME'), desc = L('SETTINGS_ZONE_HEADER_ENABLED_DESC'),
@@ -252,7 +284,8 @@ local function appearanceCategory()
             fontSize = FontSize("ZoneHeaderFontSize", 24, Off("ZoneHeaderEnabled")),
             spacer3 = Spacer(1.1),
             fontColor = FontColor("ZoneHeaderFontColor", Off("ZoneHeaderEnabled")),
-        }),
+            spacer4 = Spacer(),
+        }, Extra("zoneOptions")),
 
         questHeaderSettings = Group("Quest Names", {
             format = O{ name = L('SETTINGS_FORMAT_NAME'), desc = L('SETTINGS_QUEST_HEADER_FORMAT_DESC'),
@@ -278,7 +311,8 @@ local function appearanceCategory()
             spacer5 = Spacer(1.1),
             questPadding = O{ name = L('SETTINGS_QUEST_PADDING_NAME'), arg = "QuestPadding", type = "range",
                 min = 0, max = 20, step = 1, set = SetAndRefreshView },
-        }),
+            spacer6 = Spacer(),
+        }, Extra("distanceOptions")),
 
         objectiveSettings = Group("Objectives", {
             fontSize = FontSize("ObjectiveFontSize"),
@@ -296,7 +330,7 @@ local function appearanceCategory()
             fadeCompleted = O{ name = "Fade Finished Objectives",
                 desc = "Shows objectives you have already finished dimmer, so the ones still to do stand out.",
                 arg = "FadeCompletedObjectives", type = "toggle", width = 1.4, set = SetAndRefreshView },
-        }),
+        }, Extra("timerOptions")),
     });
 end
 
@@ -396,6 +430,8 @@ local function windowCategory()
                     JQT.tracker:UpdateSettings({ width = p.Width, maxHeight = p.MaxHeight });
                 end },
         }),
+
+        visibilityGroup = JQT.visibilityOptions and O(JQT.visibilityOptions()) or nil,
 
         backgroundGroup = Group("Background", {
             backgroundAlwaysVisible = O{ name = L('SETTINGS_BACKGROUND_ALWAYS_VISIBLE_NAME'), desc = L('SETTINGS_BACKGROUND_ALWAYS_VISIBLE_DESC'),
@@ -573,12 +609,18 @@ SlashCmdList['JTS_QUESTTRACKER'] = function(command)
         JQT:SetTrackerHidden(false);
     elseif command == "hide" then
         JQT:SetTrackerHidden(true);
+    elseif command == "collapse" then
+        JQT:CollapseAll();
+    elseif command == "expand" then
+        JQT:ExpandAll();
+    elseif command == "share" then
+        JQT:ShareQuests();
     elseif command == "minimap" then
         local icon = JQT.db.profile.MinimapIcon;
         icon.hide = not icon.hide;
         JQT:UpdateMinimapButton();
         say(icon.hide and "Minimap button hidden." or "Minimap button shown.");
     else
-        say("Usage: /jtsqt [options | toggle | show | hide | minimap | reset | status]");
+        say("Usage: /jtsqt [options | toggle | show | hide | collapse | expand | share | minimap | reset | status]");
     end
 end
