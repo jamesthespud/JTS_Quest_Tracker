@@ -137,6 +137,79 @@ function Compat:MirrorWatch(questID, watched)
     try(Q(watched and "AddQuestWatch" or "RemoveQuestWatch"), questID);
 end
 
+-- ---------------------------------------------------------------------------
+-- Changes that make Blizzard's world map redraw
+-- ---------------------------------------------------------------------------
+
+--[[
+    Changing the focused (super-tracked) quest or the watch list makes the world map redraw its quest
+    pins straight away, inside our call. In combat with the map open that redraw is blocked and blamed
+    on us (ADDON_ACTION_BLOCKED: Button:SetPassThroughButtons()), and pins it creates while the map is
+    open stay "ours" and can trip the same error in a later fight.
+
+    So these changes wait until you are out of combat and the map is closed. The map redraws by
+    itself the next time it opens. Each key keeps only its latest change.
+]]
+
+local pending, pendingOrder = {}, {};
+local runner;
+
+function Compat:CanChangeQuestMapState()
+    if _G.InCombatLockdown and _G.InCombatLockdown() then return false end
+
+    local map = _G.WorldMapFrame;
+    if map and map.IsShown and map:IsShown() then return false end
+
+    return true;
+end
+
+local function flush()
+    if not Compat:CanChangeQuestMapState() then return end
+
+    local order = pendingOrder;
+    local jobs = pending;
+    pending, pendingOrder = {}, {};
+
+    for _, key in ipairs(order) do
+        local job = jobs[key];
+        if job then pcall(job) end
+    end
+
+    if runner and #pendingOrder == 0 then runner:Hide() end
+end
+
+-- Runs fn now if it is safe, otherwise as soon as it is. Returns true when it ran now.
+function Compat:RunWhenMapSafe(key, fn)
+    if self:CanChangeQuestMapState() and not pending[key] then
+        pcall(fn);
+        return true;
+    end
+
+    if not pending[key] then pendingOrder[#pendingOrder + 1] = key end
+    pending[key] = fn;
+
+    if not runner and _G.CreateFrame then
+        runner = _G.CreateFrame("Frame");
+        local elapsedTotal = 0;
+
+        runner:SetScript("OnUpdate", function(_, elapsed)
+            elapsedTotal = elapsedTotal + (elapsed or 0);
+            if elapsedTotal < 0.25 then return end
+            elapsedTotal = 0;
+
+            flush();
+        end);
+    end
+
+    if runner then runner:Show() end
+
+    return false;
+end
+
+function Compat:CancelMapChange(key)
+    pending[key] = nil;
+end
+
 -- Blizzard's own objective tracker, which we hide while JTS Quest Tracker runs.
 function Compat:GetBlizzardTracker()
     local frame = _G.ObjectiveTrackerFrame;

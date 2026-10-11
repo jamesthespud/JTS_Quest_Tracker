@@ -1,6 +1,6 @@
 local Compat = LibStub("JTSQTCompat-1.0");
 local QLH = LibStub("JTSQTQuestLogHelper-1.0");
-local helper = LibStub:NewLibrary("JTSQTQuestWatchHelper-1.0", 3);
+local helper = LibStub:NewLibrary("JTSQTQuestWatchHelper-1.0", 4);
 if not helper then return end
 
 --[[
@@ -72,9 +72,14 @@ function helper:SetWatched(quest, watched)
     if mirrored[questID] ~= watched then
         mirrored[questID] = watched;
 
-        applying = true;
-        pcall(Compat.MirrorWatch, Compat, questID, watched);
-        applying = false;
+        -- Out of combat and with the world map closed only (see Compat:RunWhenMapSafe).
+        Compat:RunWhenMapSafe("watch-" .. questID, function()
+            if mirrored[questID] ~= watched then return end -- changed again meanwhile
+
+            applying = true;
+            pcall(Compat.MirrorWatch, Compat, questID, watched);
+            applying = false;
+        end);
     end
 
     if previous == watched then return false end

@@ -117,6 +117,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   last. Countdown for timed quests. Quest distances from WoW's own quest helper, so Sort by Quest Proximity works
   without Questie, plus optional distance after quest names. Share all quests, or one zone's, with your group.
   Right-click menus on the tracker and zone headers.
+  Fixed: "ADDON_ACTION_BLOCKED ... Button:SetPassThroughButtons()" in combat with the world map open (focus and
+  tracking changes now wait until combat ends and the map is closed).
 - **1.2.0** Announce to Party (off by default; Alerts > Objective Complete Alert): when you finish an objective
   or a whole quest, your group sees it in party chat, like Questie's announce, e.g.
   `{rt1} JTS QT: Diseased Timber Wolf slain: 8/8 (Wolves Across the Border)`. Uses instance chat in dungeon

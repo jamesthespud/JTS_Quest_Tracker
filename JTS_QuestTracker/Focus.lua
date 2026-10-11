@@ -16,6 +16,7 @@ local _, ns = ...
 
 local JQT = JTS_QuestTracker;
 local QLH = LibStub("JTSQTQuestLogHelper-1.0");
+local Compat = LibStub("JTSQTCompat-1.0");
 
 -- The same icon Forever's own navigation arrow uses, so it always exists in the game.
 local FOCUS_ICON = "|A:Navigation-Tracked-Icon:13:13|a ";
@@ -24,7 +25,14 @@ local function superTrack()
     return C_SuperTrack;
 end
 
+-- A focus change waiting for combat to end or the map to close (0 = stop focusing), or nil.
+local pendingFocus;
+
 function JQT:GetFocusedQuestID()
+    if pendingFocus ~= nil then
+        return pendingFocus ~= 0 and pendingFocus or nil;
+    end
+
     local api = superTrack();
     if not api or not api.GetSuperTrackedQuestID then return nil end
 
@@ -37,18 +45,40 @@ function JQT:IsFocused(questID)
     return questID ~= nil and questID == self:GetFocusedQuestID();
 end
 
--- questID 0 or nil stops focusing.
+-- questID 0 or nil stops focusing. Changing the focus redraws the world map's quest pins, so it
+-- waits until you are out of combat and the map is closed (see Compat:RunWhenMapSafe); the tracker
+-- shows the new focus straight away. Returns true when it happened now.
 function JQT:SetFocusedQuest(questID)
     local api = superTrack();
     if not api or not api.SetSuperTrackedQuestID then return end
 
-    pcall(api.SetSuperTrackedQuestID, questID or 0);
+    questID = questID or 0;
+    pendingFocus = questID;
+
+    local now = Compat:RunWhenMapSafe("focus", function()
+        pendingFocus = nil;
+        pcall(api.SetSuperTrackedQuestID, questID);
+
+        if JQT.tracker then JQT:RefreshView() end
+    end);
+
+    if not now and self.tracker then self:RefreshView() end
+
+    return now;
 end
 
+local function say(message)
+    print(ns.CONSTANTS.LOGGER.PREFIX .. ns.CONSTANTS.LOGGER.TYPES.INFO.COLOR, message);
+end
+
+-- By hand (middle-click or the menu): say so when it has to wait.
 function JQT:ToggleFocus(quest)
     if not quest or not quest.questID then return end
 
-    self:SetFocusedQuest(self:IsFocused(quest.questID) and 0 or quest.questID);
+    if not self:SetFocusedQuest(self:IsFocused(quest.questID) and 0 or quest.questID) and pendingFocus ~= nil then
+        local inCombat = InCombatLockdown and InCombatLockdown();
+        say("The map arrow switches when " .. (inCombat and "combat ends." or "you close the map."));
+    end
 end
 
 -- Menu labels: Blizzard's own (translated) text, so it reads like their tracker.
@@ -86,6 +116,12 @@ local events = CreateFrame("Frame");
 pcall(events.RegisterEvent, events, "SUPER_TRACKING_CHANGED");
 
 events:SetScript("OnEvent", function()
+    -- You picked a quest on the map (or the game changed it) while ours was waiting: yours wins.
+    if pendingFocus ~= nil then
+        pendingFocus = nil;
+        Compat:CancelMapChange("focus");
+    end
+
     if JQT.tracker and JQT.db and JQT.db.profile.ShowFocusMarker then
         JQT:RefreshView();
     end
