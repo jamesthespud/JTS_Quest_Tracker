@@ -104,11 +104,17 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   (`/dump (select(4, GetBuildInfo()))` in game).
 - A quest, map or UI function is renamed or removed: fix it in `Compat/Compat.lua`. Every Blizzard quest, map and
   UI call goes through that file, wrapped so one missing function can't break the rest.
-- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`) so the core tracker stays as close to the original design as possible.
+- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`, `Skin.lua`, `Highlights.lua`, `Nameplates.lua`) so the core tracker stays as close to the original design as possible.
 - All internal libraries are registered under `JTSQT*` names and all globals start with `JTS_QuestTracker`, so this
   addon can be installed next to Butter Quest Tracker without the two overwriting each other.
 
 ## Version history
+
+- **3.0.0-alpha1** (test build, not a release) Modern skin (Appearance > Skin): dark rounded panel, level badges,
+  quest type labels, counts on the right, rounded progress bars, check marks and a "Ready to turn in" pill.
+  Highlight Quest Objects (Alerts > Quest Objects): turns on WoW's Interact Key icons and outlines to mark nearby
+  quest objects, and puts your own settings back when turned off. Quest item buttons glow and sparkle when your
+  target is in range. Quest icons on the nameplates of enemies you still need.
 
 - **1.2.5b** Dungeon Quests Only and Raid Quests Only (on by default): inside a dungeon or raid, only its kind of
   quests are listed. Fixed "ADDON_ACTION_BLOCKED ... Button:SetPassThroughButtons()" in combat with the world map

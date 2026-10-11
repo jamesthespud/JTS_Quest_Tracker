@@ -235,6 +235,8 @@ local function appearanceCategory()
     local fontValues, fontOrder = Choices(function() return JQT:GetFontChoices() end);
 
     return Category("Appearance", 2, {
+        skinGroup = JQT.skinOptions and Group("Skin", {}, Extra("skinOptions")) or nil,
+
         previewGroup = Group("Preview", {
             displayDummyData = O{ name = L('SETTINGS_DISPLAY_DUMMY_DATA_NAME'), desc = L('SETTINGS_DISPLAY_DUMMY_DATA_DESC'),
                 arg = "DisplayDummyData", type = "toggle", width = "full", set = SetAndRefreshView },
@@ -378,6 +380,12 @@ local function alertsCategory()
             soundQuest = SoundPicker("SoundQuestComplete", "Quest Complete Sound", "Played when a whole quest is ready to turn in."),
             soundQuestPreview = SoundPreview("SoundQuestComplete"),
         }),
+
+        questObjectsGroup = JQT.highlightOptions and (function()
+            local group = O(JQT.highlightOptions());
+            if JQT.nameplateOptions then group.args.nameplates = JQT.nameplateOptions() end
+            return group;
+        end)() or nil,
     });
 end
 

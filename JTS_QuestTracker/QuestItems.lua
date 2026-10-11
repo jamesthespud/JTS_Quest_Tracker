@@ -49,6 +49,92 @@ local function updateCooldown(button)
     end
 end
 
+-- ---------------------------------------------------------------------------
+-- Glow and sparkles when you can use the item on your target (V3 alpha)
+-- ---------------------------------------------------------------------------
+
+local TEX = "Interface\\AddOns\\JTS_QuestTracker\\Textures\\";
+
+-- A plain (non-secure) child frame, made with the button out of combat, so showing and hiding it
+-- in combat is fine.
+local function createGlow(button)
+    local glow = CreateFrame("Frame", nil, button);
+    glow:SetPoint("TOPLEFT", -10, 10);
+    glow:SetPoint("BOTTOMRIGHT", 10, -10);
+    glow:SetFrameLevel(button:GetFrameLevel() + 5);
+    glow:Hide();
+
+    glow.ring = glow:CreateTexture(nil, "OVERLAY");
+    glow.ring:SetAllPoints();
+    glow.ring:SetTexture(TEX .. "Glow");
+    glow.ring:SetBlendMode("ADD");
+    glow.ring:SetVertexColor(1, 0.82, 0.3, 1);
+
+    -- Two little stars that turn and twinkle in opposite corners.
+    glow.sparkles = {};
+    for i, corner in ipairs({ { "TOPRIGHT", -6, -6 }, { "BOTTOMLEFT", 6, 6 } }) do
+        local star = glow:CreateTexture(nil, "OVERLAY", nil, 1);
+        star:SetTexture(TEX .. "Sparkle");
+        star:SetBlendMode("ADD");
+        star:SetVertexColor(1, 0.95, 0.7, 1);
+        star:SetSize(14, 14);
+        star:SetPoint("CENTER", glow, corner[1], corner[2], corner[3]);
+        glow.sparkles[i] = star;
+    end
+
+    local pulse = glow:CreateAnimationGroup();
+    pulse:SetLooping("BOUNCE");
+    local fade = pulse:CreateAnimation("Alpha");
+    fade:SetChildKey("ring");
+    fade:SetFromAlpha(1);
+    fade:SetToAlpha(0.35);
+    fade:SetDuration(0.7);
+    fade:SetSmoothing("IN_OUT");
+    glow.pulse = pulse;
+
+    glow.spins = {};
+    for i, star in ipairs(glow.sparkles) do
+        local group = glow:CreateAnimationGroup();
+        group:SetLooping("REPEAT");
+
+        local spin = group:CreateAnimation("Rotation");
+        spin:SetTarget(star);
+        spin:SetDegrees(i == 1 and -360 or 360);
+        spin:SetDuration(3 + i);
+
+        local twinkle = group:CreateAnimation("Alpha");
+        twinkle:SetTarget(star);
+        twinkle:SetFromAlpha(1);
+        twinkle:SetToAlpha(0.2);
+        twinkle:SetDuration(0.6 + i * 0.25);
+        twinkle:SetSmoothing("IN_OUT");
+
+        glow.spins[i] = group;
+    end
+
+    -- pcall: an animation API Forever doesn't have must not stop the glow itself.
+    glow:SetScript("OnShow", function(self)
+        pcall(self.pulse.Play, self.pulse);
+        for _, group in ipairs(self.spins) do pcall(group.Play, group) end
+    end);
+    glow:SetScript("OnHide", function(self)
+        pcall(self.pulse.Stop, self.pulse);
+        for _, group in ipairs(self.spins) do pcall(group.Stop, group) end
+    end);
+
+    return glow;
+end
+
+local function setGlow(button, on)
+    if not button.glow then return end
+
+    if on and not button.glow:IsShown() then
+        button.glow:Show();
+    elseif not on and button.glow:IsShown() then
+        button.glow:Hide();
+    end
+end
+
 local function onUpdate(button, elapsed)
     button.rangeTimer = (button.rangeTimer or 0) - elapsed;
     if button.rangeTimer > 0 then return end
@@ -56,10 +142,15 @@ local function onUpdate(button, elapsed)
 
     if not button.logIndex or type(IsQuestLogSpecialItemInRange) ~= "function" then
         button.range:Hide();
+        setGlow(button, false);
         return;
     end
 
     local ok, inRange = pcall(IsQuestLogSpecialItemInRange, button.logIndex);
+
+    -- Glow when your target is in range, the item isn't on cooldown and the option is on.
+    local ready = not (button.cooldown and button.cooldown:IsShown());
+    setGlow(button, ok and inRange == 1 and ready and JQT.db and JQT.db.profile.QuestItemGlow ~= false);
 
     if ok and inRange == 0 then
         button.range:SetVertexColor(1.0, 0.1, 0.1);
@@ -132,6 +223,9 @@ local function createButton(i)
 
     button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
     button.cooldown:SetAllPoints();
+
+    local okGlow, glow = pcall(createGlow, button);
+    if okGlow then button.glow = glow end
 
     button:SetScript("OnEnter", onEnter);
     button:SetScript("OnLeave", function() GameTooltip:Hide() end);
@@ -391,6 +485,19 @@ JQT.buttonsTabGroups.questItems = function()
                     JQT.db.profile.QuestItemSize = value;
                     JQT:RefreshQuestItemData();
                 end,
+
+                disabled = function() return not JQT.db.profile.ShowQuestItems end
+            },
+
+            glow = {
+                name = "Glow When Usable (V3 alpha)",
+                desc = "The button glows and sparkles when your target is in range for the item (and it isn't on cooldown), so you know it's time to use it.",
+                type = "toggle",
+                width = 1.6,
+                order = 5,
+
+                get = function() return JQT.db.profile.QuestItemGlow ~= false end,
+                set = function(_, value) JQT.db.profile.QuestItemGlow = value end,
 
                 disabled = function() return not JQT.db.profile.ShowQuestItems end
             }

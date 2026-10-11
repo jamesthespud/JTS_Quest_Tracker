@@ -107,6 +107,7 @@ function JQT:AddQuestTimer(quest, container)
         margin = { bottom = 2.5 }
     });
 
+    container.timerFont = font; -- so a skin can tell it from the objectives
     rows[#rows + 1] = { font = font, endsAt = GetTime() + left, text = label(left), low = left <= LOW_TIME };
 
     if not ticker then

@@ -84,7 +84,8 @@ function JQT:UpdateQuestDistances(force)
         local quest = container.metadata and container.metadata.quest;
 
         if font and quest and font:IsVisible() then
-            local text = self:GetQuestHeader(quest);
+            -- The name row may be styled by a skin (Skin.lua).
+            local text = self.GetQuestRowTitle and self:GetQuestRowTitle(quest) or self:GetQuestHeader(quest);
 
             if font.font:GetText() ~= text then
                 local before = font:GetRealHeight();
