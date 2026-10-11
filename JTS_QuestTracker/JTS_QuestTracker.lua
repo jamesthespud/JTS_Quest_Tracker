@@ -605,6 +605,11 @@ local function showQuestTooltip(quest, target)
         end
     end
 
+    -- Rewards, party progress and the like (Rewards.lua, PartyProgress.lua).
+    if JQT.AddQuestTooltipExtras then
+        pcall(JQT.AddQuestTooltipExtras, JQT, quest, GameTooltip);
+    end
+
     GameTooltip:AddLine(" ");
     GameTooltip:AddLine("Click: open in quest log   Right-click: menu", grey.r, grey.g, grey.b);
     GameTooltip:AddLine("Middle-click: focus (map arrow)", grey.r, grey.g, grey.b);

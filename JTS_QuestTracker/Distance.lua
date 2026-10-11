@@ -131,7 +131,7 @@ JQT.distanceOptions = function()
     return {
         name = "Show Distance",
         desc = "Shows how far away each quest is after its name, like  |cff9d9d9d120 yd|r. It comes from WoW's own quest helper, so Questie isn't needed. Questie (if you use it) fills in quests the game has no location for.\n\nQuests in another zone or continent may show no distance.",
-        type = "toggle", arg = "ShowQuestDistance", width = 1.4,
+        type = "toggle", arg = "ShowQuestDistance", width = 1.4, order = 1,
         set = function(info, value)
             JQT.db.profile[info.arg] = value;
             JQT:UpdateDistanceTicker();
