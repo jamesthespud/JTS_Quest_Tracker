@@ -9,9 +9,13 @@ local _, ns = ...
 
     Showing it by hand while a setting hides it keeps it up until that reason ends
     (you leave the instance, or the fight is over).
+
+    Also: Dungeon Quests Only. Inside a dungeon the tracker lists only dungeon quests (the Dungeon or
+    Heroic tag, or quests filed under that dungeon in your quest log), plus anything you pinned.
 ]]
 
 local JQT = JTS_QuestTracker;
+local QLH = LibStub("JTSQTQuestLogHelper-1.0");
 
 local function say(message)
     print(ns.CONSTANTS.LOGGER.PREFIX .. ns.CONSTANTS.LOGGER.TYPES.INFO.COLOR, message);
@@ -124,6 +128,47 @@ function JTS_QuestTracker_Toggle()
 end
 
 -- ---------------------------------------------------------------------------
+-- Dungeon Quests Only
+-- ---------------------------------------------------------------------------
+
+local DUNGEON_TAGS = { dungeon = true, heroic = true };
+
+function JQT:GetInstanceType()
+    return instanceType;
+end
+
+function JQT:IsDungeonQuest(quest)
+    local ok, tag = pcall(self.GetQuestTag, self, quest);
+    if ok and tag and DUNGEON_TAGS[tag.kind] then return true end
+
+    -- Quests filed under this dungeon's name in the quest log.
+    local zone = GetRealZoneText();
+    return quest.zone ~= nil and quest.zone ~= "" and quest.zone == zone;
+end
+
+local getQuestInfo = JQT.GetQuestInfo;
+
+function JQT:GetQuestInfo()
+    local quests, questCount, samples = getQuestInfo(self);
+
+    if samples or instanceType ~= "party" or not self.db.profile.DungeonQuestsOnly then
+        return quests, questCount, samples;
+    end
+
+    -- Every dungeon quest in the log, even ones another filter (such as Current Zone Only) would
+    -- leave out, but never one you untracked by hand.
+    local untracked, only = self.db.char.MANUALLY_TRACKED_QUESTS, {};
+
+    for questID, quest in pairs(QLH:GetQuests()) do
+        if self:IsPinned(questID) or (untracked[questID] ~= false and self:IsDungeonQuest(quest)) then
+            only[questID] = quest;
+        end
+    end
+
+    return only, questCount, samples;
+end
+
+-- ---------------------------------------------------------------------------
 -- Events
 -- ---------------------------------------------------------------------------
 
@@ -146,8 +191,14 @@ events:SetScript("OnEvent", function(_, event)
         local kind = readInstanceType();
 
         if kind ~= instanceType then
+            local dungeonChanged = (kind == "party") ~= (instanceType == "party");
+
             instanceType = kind;
             override = false;
+
+            if dungeonChanged and JQT.tracker and JQT.db and JQT.db.profile.DungeonQuestsOnly then
+                JQT:RefreshView();
+            end
         end
     end
 
@@ -165,6 +216,19 @@ end);
 local function set(info, value)
     JQT.db.profile[info.arg] = value;
     JQT:UpdateVisibility();
+end
+
+-- Filters & Sorting > Filters
+JQT.dungeonFilterOptions = function()
+    return {
+        name = "Dungeon Quests Only",
+        desc = "Inside a dungeon, the tracker lists only dungeon quests: quests with the Dungeon or Heroic tag, and quests filed under that dungeon in your quest log. Pinned quests still show. Everything comes back when you leave.",
+        type = "toggle", arg = "DungeonQuestsOnly", width = 1.6,
+        set = function(info, value)
+            JQT.db.profile[info.arg] = value;
+            JQT:RefreshView();
+        end
+    };
 end
 
 JQT.visibilityOptions = function()

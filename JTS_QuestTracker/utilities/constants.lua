@@ -112,6 +112,7 @@ CONSTANTS.DB_DEFAULTS = {
         HideInDungeons = false,
         HideInRaids = false,
         HideInPvP = false,
+        DungeonQuestsOnly = true,
         ExpandCurrentZoneOnly = false,
         QuestLogFullWarning = true,
         QuestLogWarnAt = 36,

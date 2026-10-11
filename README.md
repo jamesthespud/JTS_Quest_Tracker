@@ -38,6 +38,7 @@ grouped, how it looks and where it sits on screen.
 - **Helpful tooltips.** Hover a quest to see its level (in its difficulty color), its type, its summary and every objective with its count, plus what each click does.
 - **Lock in Combat.** The tracker can't be dragged while you fight (on by default; Frame Settings > Position & Size).
 - **Hide in combat or instances.** Fade the tracker or hide it while you fight, and hide it in dungeons, raids, or battlegrounds and arenas. Showing it by hand keeps it up until the fight ends or you leave. Settings: Frame Settings > Visibility.
+- **Dungeon Quests Only.** Inside a dungeon the tracker lists only dungeon quests (the Dungeon or Heroic tag, or quests filed under the dungeon in your quest log), plus pinned quests. On by default; Filters & Sorting > Filters.
 - **Collapse All / Expand All.** Right-click the tracker header or a zone header, or use `/jtsqt collapse` and `/jtsqt expand`. Optional **Expand Current Zone Only** opens your zone and folds the others away as you travel.
 - **Quest log full warning.** When your log is nearly full the header adds `Log 37/40`, and `Log full` at 40 (Appearance > Tracker Header, warns from 36 by default).
 - **Ready to Turn In placement.** Put finished quests first or last instead of wherever your sorting puts them (Filters & Sorting > Sorting).
@@ -109,7 +110,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
-- **1.2.5** Hide in combat (fade or hide) and in dungeons, raids, or battlegrounds and arenas. Collapse All /
+- **1.2.5** Dungeon Quests Only (on by default): inside a dungeon, only dungeon quests are listed. Hide in combat
+  (fade or hide) and in dungeons, raids, or battlegrounds and arenas. Collapse All /
   Expand All and Expand Current Zone Only. Quest log full warning in the header. Ready to Turn In quests first or
   last. Countdown for timed quests. Quest distances from WoW's own quest helper, so Sort by Quest Proximity works
   without Questie, plus optional distance after quest names. Share all quests, or one zone's, with your group.
