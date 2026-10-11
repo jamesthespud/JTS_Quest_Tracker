@@ -110,14 +110,22 @@ end
 
 -- Options that live in another file (Headers.lua, Timers.lua, ...). `source` is the name of a function
 -- on JQT returning one option or a table of them; missing files are skipped.
-local function Extra(source)
-    local builder = JQT[source];
-    if type(builder) ~= "function" then return {} end
+local function Extra(source, ...)
+    local result = {};
 
-    local ok, result = pcall(builder);
-    if not ok or type(result) ~= "table" then return {} end
+    -- Several sources: merged, in the order of their own "order" fields.
+    for _, name in ipairs({ source, ... }) do
+        local builder = JQT[name];
 
-    if result.type then result = { [source] = result } end
+        if type(builder) == "function" then
+            local ok, built = pcall(builder);
+
+            if ok and type(built) == "table" then
+                if built.type then built = { [name] = built } end
+                for key, option in pairs(built) do result[key] = option end
+            end
+        end
+    end
 
     local keys = {};
     for key in pairs(result) do keys[#keys + 1] = key end
@@ -276,7 +284,7 @@ local function appearanceCategory()
             spacer3 = Spacer(1.1),
             fontColor = FontColor("TrackerHeaderFontColor", Off("TrackerHeaderEnabled")),
             spacer4 = Spacer(),
-        }, Extra("logWarningOptions")),
+        }, Extra("logWarningOptions", "turnInOptions")),
 
         zoneHeaderSettings = Group("Zone Headers", {
             enabled = O{ name = L('SETTINGS_ENABLED_NAME'), desc = L('SETTINGS_ZONE_HEADER_ENABLED_DESC'),
@@ -316,7 +324,7 @@ local function appearanceCategory()
             questPadding = O{ name = L('SETTINGS_QUEST_PADDING_NAME'), arg = "QuestPadding", type = "range",
                 min = 0, max = 20, step = 1, set = SetAndRefreshView },
             spacer6 = Spacer(),
-        }, Extra("distanceOptions")),
+        }, Extra("distanceOptions", "rewardTooltipOptions")),
 
         objectiveSettings = Group("Objectives", {
             fontSize = FontSize("ObjectiveFontSize"),
@@ -369,9 +377,6 @@ local function alertsCategory()
                 arg = "AlertFlash", type = "toggle", width = 0.8, set = SetInDB },
             alertChat = O{ name = "Chat Message", desc = "Prints a line in your chat window when you finish an objective.",
                 arg = "AlertChat", type = "toggle", width = 1.0, set = SetInDB },
-            alertParty = O{ name = "Announce to Party",
-                desc = "Tells your group in party chat when you finish an objective or a whole quest, like Questie does, so your group can see your progress even if they don't use Questie.\n\nExample:\n|cffaaaaff[Party] |r|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_1:0|t|cffaaaaff JTS QT: Diseased Timber Wolf slain: 8/8 (Wolves Across the Border)|r\n\nIn a dungeon finder group it goes to instance chat. Nothing is sent when you're not in a group.",
-                arg = "AlertParty", type = "toggle", width = 1.1, set = SetInDB },
             alertSound = O{ name = "Sound", desc = "Plays a sound when you finish an objective. The game may already play its own.",
                 arg = "AlertSound", type = "toggle", width = 0.8, set = SetInDB },
             soundObjective = SoundPicker("SoundObjectiveComplete", "Objective Complete Sound",
@@ -379,6 +384,13 @@ local function alertsCategory()
             soundObjectivePreview = SoundPreview("SoundObjectiveComplete"),
             soundQuest = SoundPicker("SoundQuestComplete", "Quest Complete Sound", "Played when a whole quest is ready to turn in."),
             soundQuestPreview = SoundPreview("SoundQuestComplete"),
+        }),
+
+        groupSettings = Group("Your Group", {
+            alertParty = O{ name = "Announce to Party",
+                desc = "Tells your group in party chat when you finish an objective or a whole quest, like Questie does, so your group can see your progress even if they don't use Questie. On by default.\n\nExample:\n|cffaaaaff[Party] |r|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_1:0|t|cffaaaaff JTS QT: Diseased Timber Wolf slain: 8/8 (Wolves Across the Border)|r\n\nIn a dungeon finder group it goes to instance chat. Nothing is sent when you're not in a group.",
+                arg = "AlertParty", type = "toggle", width = 1.6, set = SetInDB },
+            partyProgress = JQT.partyProgressOptions and O(JQT.partyProgressOptions()) or nil,
         }),
 
         questObjectsGroup = JQT.highlightOptions and (function()

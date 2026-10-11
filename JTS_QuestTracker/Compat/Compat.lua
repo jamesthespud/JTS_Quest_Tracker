@@ -270,6 +270,52 @@ function Compat:GetQuestTag(questID)
 end
 
 -- ---------------------------------------------------------------------------
+-- Rewards
+-- ---------------------------------------------------------------------------
+
+-- XP the quest gives when you turn it in (0 when none, or at max level).
+function Compat:GetQuestRewardXP(questID)
+    local xp = questID and try(_G.GetQuestLogRewardXP, questID);
+    local ok, value = pcall(function() return (tonumber(xp) or 0) > 0 and tonumber(xp) or 0 end);
+
+    return ok and value or 0;
+end
+
+local function rewardItems(countFn, infoFn, questID)
+    local items = {};
+    local n = tonumber((try(countFn, questID))) or 0;
+
+    for i = 1, n do
+        local name, texture, count, quality = try(infoFn, i, questID);
+
+        if type(name) == "string" and name ~= "" then
+            items[#items + 1] = { name = name, texture = texture, count = tonumber(count) or 1, quality = tonumber(quality) };
+        end
+    end
+
+    return items;
+end
+
+--[[
+    { xp = <number>, money = <copper>, items = { {name, texture, count, quality}, ... }, choices = { ... } }
+    or nil while the game hasn't loaded the quest's rewards yet.
+]]
+function Compat:GetQuestRewards(questID)
+    if not questID then return nil end
+
+    if type(_G.HaveQuestRewardData) == "function" and try(_G.HaveQuestRewardData, questID) == false then
+        return nil;
+    end
+
+    return {
+        xp = self:GetQuestRewardXP(questID),
+        money = tonumber((try(_G.GetQuestLogRewardMoney, questID))) or 0,
+        items = rewardItems(_G.GetNumQuestLogRewards, _G.GetQuestLogRewardInfo, questID),
+        choices = rewardItems(function(id) return _G.GetNumQuestLogChoices(id, true) end, _G.GetQuestLogChoiceInfo, questID)
+    };
+end
+
+-- ---------------------------------------------------------------------------
 -- Quest items (the "use this on ..." item some quests give you)
 -- ---------------------------------------------------------------------------
 

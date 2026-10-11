@@ -17,7 +17,7 @@ grouped, how it looks and where it sits on screen.
 
 - **Made for WoW Forever.** Built for Forever's modern quest API (it does not support other WoW clients).
 - **Pin quests.** Right-click a quest > Pin Quest. Pinned quests are always tracked, ignore the zone filter and sit first in their zone, marked with a small icon.
-- **Objective complete alert.** When an objective (or a whole quest) is finished the quest flashes briefly. Optional chat message, sound and **party announce** (tells your group in party chat, like Questie does, for groups where not everyone runs Questie; off by default).
+- **Objective complete alert.** When an objective (or a whole quest) is finished the quest flashes briefly. Optional chat message and sound, and **Announce to Party** (on by default): your group sees `{star} JTS QT: Diseased Timber Wolf slain: 8/8 (Wolves Across the Border)` in party chat, like Questie's announce, even if they don't run Questie.
 - **Objective colors by progress.** Objectives shade from red to yellow to green as you get closer to done.
 - **Thin progress bars.** Optional slim bar under counted objectives such as 3/10, 2 to 6 pixels thick.
 - **Text outline and shadow.** Choose no outline, outline or thick outline, and default, strong or no shadow.
@@ -45,6 +45,9 @@ grouped, how it looks and where it sits on screen.
 - **Quest timers.** Timed quests show `Time left: 4:32` under their name, counting down and turning red in the last minute.
 - **Distance without Questie.** Sort by Quest Proximity now uses WoW Forever's own quest helper (the same distance its quest arrow shows), with Questie only filling in quests the game has no location for. Optional **Show Distance** puts `120 yd` after each quest name (Appearance > Quest Names).
 - **Share quests with your group.** Right-click the tracker header for Share All Quests, or a zone header to share just that zone's quests (`/jtsqt share` too). They go out one every 3 seconds so your group can take each one.
+- **Party progress.** Group members who also use JTS Quest Tracker see each other's progress on shared quests, right under their own (`Mike  5/8`) and in the quest tooltip. Only quest IDs and counts are shared, through hidden addon messages. Settings: Alerts > Your Group.
+- **Rewards in the tooltip.** Hover a quest to see its XP, money, items and the items you can choose from.
+- **Turn-in XP.** The header shows what you're carrying back to town, like `3 ready · 4,250 XP`.
 - **Easy to scan.** Finished objectives fade back, zone headers show how many quests they hold (`Elwynn Forest (3)`), and collapsed zones stay collapsed after a reload.
 - **Safer startup.** If the tracker ever fails to start, you get Blizzard's default tracker back instead of none.
 - **Bug fixes** for quest names containing `%`, quests without objectives looking "updated", a broken locale fallback, moved popup fields and stale quest log indexes.
@@ -104,18 +107,21 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   (`/dump (select(4, GetBuildInfo()))` in game).
 - A quest, map or UI function is renamed or removed: fix it in `Compat/Compat.lua`. Every Blizzard quest, map and
   UI call goes through that file, wrapped so one missing function can't break the rest.
-- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`, `Skin.lua`, `Highlights.lua`, `Nameplates.lua`) so the core tracker stays as close to the original design as possible.
+- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`, `Rewards.lua`, `PartyProgress.lua`, `Skin.lua`, `Highlights.lua`, `Nameplates.lua`) so the core tracker stays as close to the original design as possible.
 - All internal libraries are registered under `JTSQT*` names and all globals start with `JTS_QuestTracker`, so this
   addon can be installed next to Butter Quest Tracker without the two overwriting each other.
 
 ## Version history
 
-- **3.0.0-alpha1** (test build, not a release) Modern skin (Appearance > Skin): dark rounded panel, level badges,
+- **3.0.0-alpha2** (test build, not a release; includes everything in 1.3.0) Modern skin (Appearance > Skin): dark rounded panel, level badges,
   quest type labels, counts on the right, rounded progress bars, check marks and a "Ready to turn in" pill.
   Highlight Quest Objects (Alerts > Quest Objects): turns on WoW's Interact Key icons and outlines to mark nearby
   quest objects, and puts your own settings back when turned off. Quest item buttons glow and sparkle when your
   target is in range. Quest icons on the nameplates of enemies you still need.
-
+- **1.3.0** Party progress: group members who also use JTS Quest Tracker see each other's progress on shared
+  quests (hidden addon messages, nothing in chat). Rewards (XP, money, items, choices) in the quest tooltip. Turn-in
+  XP in the header (`3 ready · 4,250 XP`). Announce to Party is now on by default, in the new Alerts > Your Group
+  section.
 - **1.2.5b** Dungeon Quests Only and Raid Quests Only (on by default): inside a dungeon or raid, only its kind of
   quests are listed. Fixed "ADDON_ACTION_BLOCKED ... Button:SetPassThroughButtons()" in combat with the world map
   open (focus and tracking changes now wait until combat ends and the map is closed).

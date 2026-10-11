@@ -399,7 +399,13 @@ local function styleTrackerHeader(self, trackerContainer, visible, questCount)
     if not font or font.type ~= "font" then return end
 
     restyle(font, function()
-        font:SetLabel(JQTL:GetString('QT_QUESTS'):upper());
+        local label = JQTL:GetString('QT_QUESTS'):upper();
+
+        -- What you are carrying back to town (Rewards.lua).
+        local summary = self.db.profile.TurnInXPSummary and self.GetTurnInSummaryText and self:GetTurnInSummaryText();
+        if summary then label = label .. "  " .. self:GetStatusColorCode("complete") .. summary .. "|r" end
+
+        font:SetLabel(label);
         font:SetColor(TEXT);
         font:SetHoverColor(TEXT);
         font:ModernAccent(accent());
@@ -474,7 +480,22 @@ local function styleQuest(self, quest, questContainer)
     for i = 1, #questContainer.elements do
         local row = questContainer.elements[i];
 
-        if row ~= title and row.type == "font" then
+        if row.partyRow then
+            -- A group member's progress (PartyProgress.lua): name on the left, progress on the right.
+            local text = row.font:GetText() or "";
+            local name, progress = text:match("^%s*(.-)  (.+)$");
+
+            if name then
+                local done = progress == "ready";
+                restyle(row, function()
+                    row:SetLabel(name);
+                    row.modernLeft = 10;
+                    row:ModernLayout();
+                    row:ModernRight(done and (CHECK .. progress) or progress, done and self:GetStatusColor("complete") or ZONE);
+                    row:SetColor(ZONE_COUNT);
+                end);
+            end
+        elseif row ~= title and row.type == "font" then
             local text = (row.font:GetText() or ""):gsub("^ %- ", "");
             local isTimer = row == questContainer.timerFont;
             local objective;
