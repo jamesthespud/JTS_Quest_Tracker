@@ -219,6 +219,7 @@ local function trackingCategory()
             hideCompletedQuests = O{ name = L('SETTINGS_HIDE_COMPLETED_QUESTS_NAME'), desc = L('SETTINGS_HIDE_COMPLETED_QUESTS_DESC'),
                 arg = "HideCompletedQuests", type = "toggle", width = 1.6, disabled = On("DisableFilters"), set = SetAndRefreshQuestWatch },
             dungeonQuestsOnly = JQT.dungeonFilterOptions and O(JQT.dungeonFilterOptions()) or nil,
+            raidQuestsOnly = JQT.raidFilterOptions and O(JQT.raidFilterOptions()) or nil,
             spacer1 = Spacer(),
             reset = O{ name = L('SETTINGS_RESET_TRACKING_OVERRIDES_NAME'), desc = L('SETTINGS_RESET_TRACKING_OVERRIDES_DESC'),
                 type = "execute", width = 1.3, func = function() JQT:ResetOverrides() end },
