@@ -179,6 +179,9 @@ local function sortingChoices()
         sorting[#sorting + 1] = "ByQuestProximity";
     end
 
+    values.ByManual = "Manual (drag to reorder)";
+    sorting[#sorting + 1] = "ByManual";
+
     return values, sorting;
 end
 
@@ -213,6 +216,11 @@ local function trackingCategory()
                 arg = "TurnInPlacement", type = "select", width = 1.0,
                 values = { Normal = "Sorted", Top = "First", Bottom = "Last" }, sorting = { "Normal", "Top", "Bottom" },
                 set = function(info, value) SetInDB(info, value); JQT:Sort(); end },
+            resetManualOrder = O{ name = "Reset Manual Order",
+                desc = "Forgets the order you dragged your quests into.",
+                type = "execute", width = 1.0,
+                hidden = function() return JQT.db.profile.Sorting ~= "ByManual" end,
+                func = function() if JQT.ResetManualOrder then JQT:ResetManualOrder() end end },
             spacer1 = Spacer(),
             autoHideQuestHelperIcons = O{ name = L('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_NAME'),
                 desc = function() return JQTL:GetString('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_DESC', table.concat(QH:GetActiveAddons(), ", ")) end,
@@ -224,6 +232,12 @@ local function trackingCategory()
         focusGroup = JQT.focusOptions and (function()
             local group = JQT.focusOptions();
             group.order = 1000000; -- after Sorting and Filters
+            return group;
+        end)() or nil,
+
+        autoQuestGroup = JQT.autoQuestOptions and (function()
+            local group = JQT.autoQuestOptions();
+            group.order = 1000001; -- after Focus
             return group;
         end)() or nil,
 
@@ -406,6 +420,7 @@ local function alertsCategory()
                 desc = "Tells your group in party chat when you finish an objective or a whole quest, like Questie does, so your group can see your progress even if they don't use Questie. On by default.\n\nExample:\n|cffaaaaff[Party] |r|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_1:0|t|cffaaaaff JTS QT: Diseased Timber Wolf slain: 8/8 (Wolves Across the Border)|r\n\nIn a dungeon finder group it goes to instance chat. Nothing is sent when you're not in a group.",
                 arg = "AlertParty", type = "toggle", width = 1.6, set = SetInDB },
             partyProgress = JQT.partyProgressOptions and O(JQT.partyProgressOptions()) or nil,
+            partyProgressDisplay = JQT.partyProgressDisplayOptions and O(JQT.partyProgressDisplayOptions()) or nil,
         }),
 
         questObjectsGroup = JQT.highlightOptions and (function()

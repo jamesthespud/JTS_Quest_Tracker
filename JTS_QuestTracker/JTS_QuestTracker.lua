@@ -254,7 +254,8 @@ local SORT_BY = {
     ByLevelReversed = { "level", ">" },
     ByPercentCompleted = { "completionPercent", ">" },
     ByRecentlyUpdated = { "lastUpdated", ">" },
-    ByQuestProximity = { "distance", "<" }
+    ByQuestProximity = { "distance", "<" },
+    ByManual = { "manualOrder", "<" } -- dragged into place by hand (ManualOrder.lua)
 };
 
 -- Compares one field; quests missing the value go last, ties keep quest log order.
@@ -337,6 +338,15 @@ function JQT:Sort()
             else
                 quest.distance = 0;
             end
+        end
+    end
+
+    -- Manual: the order the player dragged the quests into (new quests go last).
+    if self.db.profile.Sorting == "ByManual" then
+        local saved = self.db.char.ManualOrder or {};
+
+        for questID, quest in pairs(quests) do
+            quest.manualOrder = saved[questID];
         end
     end
 
@@ -755,7 +765,12 @@ function JQT:AddQuest(quest, parent)
         margin = { bottom = p.QuestPadding, left = (p.ZoneHeaderEnabled or not p.TrackerHeaderEnabled) and 0 or 5 },
         metadata = { quest = quest },
         events = {
-            OnMouseUp = function(button) self:OnQuestClicked(quest, button) end,
+            OnMouseUp = function(button, container)
+                -- Letting go after dragging the quest to a new place (ManualOrder.lua) isn't a click.
+                -- A quest dragged to a new place (Manual sorting, ManualOrder.lua) isn't a click.
+                if container and container.dragged and container.manualMoved then return end
+                self:OnQuestClicked(quest, button);
+            end,
             OnEnter = function(_, target) showQuestTooltip(quest, target) end,
             OnLeave = function() GameTooltip:ClearLines(); GameTooltip:Hide(); end
         }
@@ -900,6 +915,11 @@ function JQT:ShowContextMenu(quest)
         local share = root:CreateButton(JQTL:GetString('QT_SHARE_QUEST'), function() Compat:ShareQuest(questID) end);
         if share and share.SetEnabled and (not UnitInParty("player") or not Compat:IsQuestPushable(questID)) then
             share:SetEnabled(false);
+        end
+
+        -- Items from other files (e.g. TomTom Waypoint in Integrations.lua).
+        for _, extra in ipairs(self.contextMenuExtras or {}) do
+            pcall(extra, self, root, quest);
         end
 
         root:CreateButton(JQTL:GetString('QT_CANCEL_QUEST'), function() playSound("IG_MAINMENU_OPTION_CHECKBOX_ON") end);

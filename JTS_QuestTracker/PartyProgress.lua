@@ -371,11 +371,49 @@ function JQT:FormatPartyProgress(progress)
 end
 
 local GREY = { r = 0.62, g = 0.62, b = 0.62 };
+local GROUP_ICON = "|TInterface\\AddOns\\JTS_QuestTracker\\Textures\\Group:0|t";
+
+-- "Count" (default): a small group icon and how many members have the quest, after its name.
+-- "Rows": one row per member under the quest.
+local function display()
+    return JQT.db.profile.PartyProgressDisplay == "Rows" and "Rows" or "Count";
+end
+
+local getQuestHeader = JQT.GetQuestHeader;
+
+function JQT:GetQuestHeader(quest)
+    local header = getQuestHeader(self, quest);
+
+    if quest and quest.questID and display() == "Count" then
+        local others = quest.sampleParty or self:GetPartyProgress(quest.questID);
+
+        if #others > 0 then
+            header = header .. "  |cff9e9e9e" .. GROUP_ICON .. #others .. "|r";
+        end
+    end
+
+    return header;
+end
 
 local addQuest = JQT.AddQuest;
 
+-- Rows are pooled: a recycled row (or quest) must not still say it belongs to a group member.
+local fontAcquire = JTS_QuestTrackerFont.OnAcquire;
+function JTS_QuestTrackerFont:OnAcquire(...)
+    fontAcquire(self, ...);
+    self.partyRow = nil;
+end
+
+local containerAcquire = JTS_QuestTrackerContainer.OnAcquire;
+function JTS_QuestTrackerContainer:OnAcquire(...)
+    containerAcquire(self, ...);
+    self.partyRows = nil;
+end
+
 function JQT:AddQuest(quest, parent, ...)
     local result = addQuest(self, quest, parent, ...);
+
+    if display() ~= "Rows" then return result end
 
     local others = quest.sampleParty or self:GetPartyProgress(quest.questID);
     if #others == 0 then return result end
@@ -482,6 +520,20 @@ end);
 -- ---------------------------------------------------------------------------
 -- Option (Alerts > Group)
 -- ---------------------------------------------------------------------------
+
+JQT.partyProgressDisplayOptions = function()
+    return {
+        name = "Show Party Progress As", order = 3, width = 1.2,
+        desc = "|cffffffffCount|r: a small group icon and the number of group members who have the quest, after its name, like  |cff9e9e9e" .. GROUP_ICON .. "2|r. Hover the quest to see everyone's progress.\n|cffffffffRows|r: a row per member under the quest, like  |cff9e9e9eMike  5/8|r.",
+        type = "select", arg = "PartyProgressDisplay",
+        values = { Count = "Count (icon)", Rows = "Rows" }, sorting = { "Count", "Rows" },
+        set = function(info, value)
+            JQT.db.profile[info.arg] = value;
+            JQT:RefreshView();
+        end,
+        disabled = function() return JQT.db.profile.PartyProgress == false end
+    };
+end
 
 JQT.partyProgressOptions = function()
     return {

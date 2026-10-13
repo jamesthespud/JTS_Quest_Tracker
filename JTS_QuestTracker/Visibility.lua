@@ -13,6 +13,10 @@ local _, ns = ...
     Also: Dungeon Quests Only / Raid Quests Only. Inside a dungeon (raid) the tracker lists only
     dungeon (raid) quests: the Dungeon or Heroic tag (the Raid tag), or quests filed under that
     instance in your quest log, plus anything you pinned.
+
+    And: Collapse in Instances. Entering a dungeon, raid, battleground, arena or scenario collapses
+    the tracker to its header; leaving opens it again (only if we were the ones who collapsed it and
+    it is still collapsed).
 ]]
 
 local JQT = JTS_QuestTracker;
@@ -37,6 +41,31 @@ local function readInstanceType()
     local ok, inInstance, kind = pcall(IsInInstance);
 
     return (ok and inInstance and kind) or "none";
+end
+
+-- Collapse in Instances. db.char.AutoCollapsed remembers that we collapsed it (kept over a reload).
+local function autoCollapse(kind)
+    local db = JQT.db;
+    if not db then return false end
+
+    local sections = db.char.CollapsedSections;
+    if not sections then return false end
+
+    if kind ~= "none" then
+        if db.profile.AutoCollapseInInstance and not sections["QUESTS"] and not db.char.AutoCollapsed then
+            sections["QUESTS"] = true;
+            db.char.AutoCollapsed = true;
+            return true;
+        end
+    elseif db.char.AutoCollapsed then
+        db.char.AutoCollapsed = nil;
+        if sections["QUESTS"] then
+            sections["QUESTS"] = nil;
+            return true;
+        end
+    end
+
+    return false;
 end
 
 -- Why the settings hide the tracker right now ("combat", "dungeons", ...), or nil.
@@ -211,7 +240,9 @@ events:SetScript("OnEvent", function(_, event)
             instanceType = kind;
             override = false;
 
-            if JQT.tracker and (filterBefore or activeFilter()) then
+            local collapsedNow = autoCollapse(kind);
+
+            if JQT.tracker and (collapsedNow or filterBefore or activeFilter()) then
                 JQT:RefreshView();
             end
         end
@@ -288,6 +319,11 @@ JQT.visibilityOptions = function()
             pvp = {
                 name = "Hide in PvP", type = "toggle", arg = "HideInPvP", width = 0.9, order = 6, set = set,
                 desc = "Hides the tracker in battlegrounds and arenas."
+            },
+            collapse = {
+                name = "Collapse in Instances", type = "toggle", arg = "AutoCollapseInInstance", width = 1.4, order = 6.5,
+                desc = "Entering a dungeon, raid, battleground, arena or scenario collapses the tracker to its header. It opens again when you leave (unless you opened it yourself inside).\n\nClick the header to open it at any time.",
+                set = function(info, value) JQT.db.profile[info.arg] = value end
             },
             note = {
                 name = "|cff999999Showing the tracker by hand (/jtsqt toggle, your key binding or the minimap button) keeps it up until you leave the instance or the fight ends.|r",
