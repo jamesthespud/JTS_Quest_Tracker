@@ -397,6 +397,19 @@ end
 
 local addQuest = JQT.AddQuest;
 
+-- Rows are pooled: a recycled row (or quest) must not still say it belongs to a group member.
+local fontAcquire = JTS_QuestTrackerFont.OnAcquire;
+function JTS_QuestTrackerFont:OnAcquire(...)
+    fontAcquire(self, ...);
+    self.partyRow = nil;
+end
+
+local containerAcquire = JTS_QuestTrackerContainer.OnAcquire;
+function JTS_QuestTrackerContainer:OnAcquire(...)
+    containerAcquire(self, ...);
+    self.partyRows = nil;
+end
+
 function JQT:AddQuest(quest, parent, ...)
     local result = addQuest(self, quest, parent, ...);
 

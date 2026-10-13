@@ -157,6 +157,13 @@ local function drop(row)
     JQT:RefreshView();
 end
 
+-- Quest rows are pooled: a recycled row starts without a finished drag.
+local containerAcquire = JTS_QuestTrackerContainer.OnAcquire;
+function JTS_QuestTrackerContainer:OnAcquire(...)
+    containerAcquire(self, ...);
+    self.manualMoved = nil;
+end
+
 local addQuest = JQT.AddQuest;
 
 function JQT:AddQuest(quest, parent, ...)
