@@ -18,7 +18,12 @@ local _, ns = ...
 
 local JQT = JTS_QuestTracker;
 
-local WIDTH, HEIGHT = 700, 440;
+local WIDTH, HEIGHT = 700, 450;
+
+-- Footer, from the bottom edge up: the credit line, a thin rule, then the buttons and page names.
+local CREDIT_STRIP = 26;              -- the rule sits here; the credit is below it
+local BUTTONS_Y = CREDIT_STRIP + 10;  -- bottom of All Settings / Back / Next
+local FOOTER = BUTTONS_Y + 24 + 14;   -- pages end here (buttons are 24 high, plus a gap)
 local GREEN = { r = 0.2, g = 1, b = 0.6 };
 
 local function p() return JQT.db.profile end
@@ -372,7 +377,7 @@ local function build()
     local function newPage(title)
         local page = CreateFrame("Frame", nil, frame);
         page:SetPoint("TOPLEFT", 24, top);
-        page:SetPoint("BOTTOMRIGHT", -24, 64);
+        page:SetPoint("BOTTOMRIGHT", -24, FOOTER);
         page:Hide();
 
         page.title = text(page, 16, NORMAL_FONT_COLOR or { r = 1, g = 0.82, b = 0 });
@@ -432,7 +437,7 @@ local function build()
     -- Footer: settings on the left, where you are in the middle, Back / Next on the right.
     local settings = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
     settings:SetSize(130, 24);
-    settings:SetPoint("BOTTOMLEFT", 24, 20);
+    settings:SetPoint("BOTTOMLEFT", 24, BUTTONS_Y);
     settings:SetText("All Settings");
     settings:SetScript("OnClick", function()
         frame:Hide();
@@ -441,7 +446,7 @@ local function build()
 
     local nextButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
     nextButton:SetSize(110, 24);
-    nextButton:SetPoint("BOTTOMRIGHT", -24, 20);
+    nextButton:SetPoint("BOTTOMRIGHT", -24, BUTTONS_Y);
 
     local backButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
     backButton:SetSize(90, 24);
@@ -449,12 +454,20 @@ local function build()
     backButton:SetText("Back");
 
     local steps = text(frame, 12, { r = 0.55, g = 0.55, b = 0.55 }, "CENTER");
-    steps:SetPoint("BOTTOM", 0, 26);
+    steps:SetPoint("BOTTOM", 0, BUTTONS_Y + 6);
 
     local credit = text(frame, 10, { r = 0.45, g = 0.45, b = 0.45 }, "CENTER");
-    credit:SetPoint("BOTTOM", 0, 6);
-    credit:SetWidth(WIDTH - 40);
-    credit:SetText("James's own fork of Butter Quest Tracker by Butter Cookie Kitkat (MIT). Not affiliated with the original author.  ·  /jtsqt welcome shows this again");
+    -- The credit has its own strip under the buttons, with a thin line between them.
+    credit:SetPoint("BOTTOM", 0, 9);
+    credit:SetWidth(WIDTH - 48);
+    credit:SetWordWrap(false);
+
+    local rule = frame:CreateTexture(nil, "ARTWORK");
+    rule:SetPoint("BOTTOMLEFT", 24, CREDIT_STRIP);
+    rule:SetPoint("BOTTOMRIGHT", -24, CREDIT_STRIP);
+    rule:SetHeight(1);
+    rule:SetColorTexture(1, 1, 1, 0.08);
+    credit:SetText("James's own fork of Butter Quest Tracker by Butter Cookie Kitkat (MIT). Not affiliated with the original author.  ·  /jtsqt welcome");
 
     local current = 1;
     local newPage; -- the "New in" page, rebuilt for whatever is new since the last visit
@@ -496,7 +509,7 @@ local function build()
 
         newPage = CreateFrame("Frame", nil, frame);
         newPage:SetPoint("TOPLEFT", 24, top);
-        newPage:SetPoint("BOTTOMRIGHT", -24, 64);
+        newPage:SetPoint("BOTTOMRIGHT", -24, FOOTER);
         newPage.isNewPage = true;
         newPage.name = "New in " .. tostring(ns.CONSTANTS.VERSION);
 
@@ -559,7 +572,7 @@ local function build()
         tallest = math.max(tallest, math.ceil(n / columns));
     end
 
-    local height = 86 + 50 + tallest * rowHeight + 40 + 64;
+    local height = 86 + 50 + tallest * rowHeight + 40 + FOOTER;
     frame:SetHeight(math.max(HEIGHT, height));
 
     local screenHeight = UIParent and UIParent:GetHeight();
