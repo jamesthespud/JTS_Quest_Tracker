@@ -4,8 +4,8 @@ local _, ns = ...
     Sticky header.
 
     The tracker header ("Quests (10/40)  3 ready · 4,250 XP") scrolls away with the list. With this,
-    a copy of it stays pinned to the top of the tracker once you scroll down, so the counts and the
-    turn-in XP are always in view. It is the same text, font and colors, and clicking it does what
+    a copy of it stays pinned to the top of the tracker once you scroll down (or to the bottom, when
+    Header Position is Bottom and you scroll up), so the counts and the turn-in XP are always in view. It is the same text, font and colors, and clicking it does what
     clicking the header does: drag to move, left-click to collapse, right-click for the menu.
 ]]
 
@@ -42,8 +42,6 @@ local function build(tracker)
     if sticky then return sticky end
 
     sticky = CreateFrame("Frame", nil, tracker);
-    sticky:SetPoint("TOPLEFT", tracker, "TOPLEFT", 0, 0);
-    sticky:SetPoint("TOPRIGHT", tracker, "TOPRIGHT", 0, 0);
     sticky:SetHeight(24);
     -- Above the list, below the scroll bar (which sits at +20).
     sticky:SetFrameLevel((tracker:GetFrameLevel() or 0) + 19);
@@ -71,7 +69,7 @@ local function fill()
     local p = JQT.db.profile;
     local text = sticky.text;
 
-    text:SetMargin({ left = 10, right = 10, top = 6 });
+    text:SetMargin({ left = 10, right = 10, top = atBottom() and 4 or 6 });
     text:SetLabel(JQT:GetTrackerHeader(headerArgs[1], headerArgs[2]));
     text:SetSize(p.TrackerHeaderFontSize);
     text:SetColor(p.TrackerHeaderFontColor);
@@ -84,7 +82,32 @@ local function fill()
     if JQT.StyleStickyHeader then pcall(JQT.StyleStickyHeader, JQT, sticky, headerArgs[1], headerArgs[2]) end
 end
 
--- Shows the copy once the real header has scrolled up out of view, hides it otherwise.
+local function atBottom()
+    return JQT.db.profile.HeaderPosition == "Bottom";
+end
+
+-- Pinned to the top of the tracker, or to the bottom when the header sits below the list.
+local function place(tracker)
+    local edge = atBottom() and "BOTTOM" or "TOP";
+    if sticky.edge == edge then return end
+    sticky.edge = edge;
+
+    sticky:ClearAllPoints();
+    sticky:SetPoint(edge .. "LEFT", tracker, edge .. "LEFT", 0, 0);
+    sticky:SetPoint(edge .. "RIGHT", tracker, edge .. "RIGHT", 0, 0);
+end
+
+-- How far the list is from the end where the real header is, in pixels.
+local function distanceFromHeader(tracker)
+    local offset = tracker:_getScrollOffset() or 0;
+    if not atBottom() then return offset end
+
+    local overflow = (tracker.content:GetHeight() or 0) - (tracker:GetHeight() or 0);
+
+    return overflow > 1 and (overflow - offset) or 0;
+end
+
+-- Shows the copy once the real header has scrolled out of view, hides it otherwise.
 function JQT:UpdateStickyHeader()
     local tracker = self.tracker;
     if not tracker then return end
@@ -94,10 +117,9 @@ function JQT:UpdateStickyHeader()
         return;
     end
 
-    local offset = tracker:_getScrollOffset() or 0;
-
-    if offset > 2 then
+    if distanceFromHeader(tracker) > 2 then
         build(tracker);
+        place(tracker);
 
         if not sticky:IsShown() or sticky.dirty then
             sticky.dirty = false;
