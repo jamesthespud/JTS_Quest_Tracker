@@ -104,6 +104,7 @@ function Font:ModernReset()
     end
 
     self.modernLeft, self.modernRight, self.modernPadY, self.modernMinHeight, self.modernLine = 0, 0, 0, 0, nil;
+    self.shareReserve = nil;
 
     if self.barTrack then plain(self.barTrack); plain(self.barFill) end
 end
@@ -470,6 +471,15 @@ local function styleZoneHeader(self, zone, questsInZone)
         font:SetHoverColor(TEXT);
 
         if p.ZoneHeaderQuestCount then font:ModernRight(tostring(questsInZone), ZONE_COUNT) end
+
+        -- "Share all" (Headers.lua) goes just left of the count.
+        local share = header.jtsShareButton;
+        if share and share:IsShown() then
+            share:ClearAllPoints();
+            share:SetPoint("TOPRIGHT", header, "TOPRIGHT", -(font.modernRight or 0), 0);
+            font.modernRight = (font.modernRight or 0) + (share:GetWidth() or 40) + 6;
+            font:ModernLayout();
+        end
     end);
 end
 
