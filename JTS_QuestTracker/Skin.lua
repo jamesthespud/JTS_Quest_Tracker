@@ -414,12 +414,18 @@ local function styleTrackerHeader(self, trackerContainer, visible, questCount)
         if text then font:ModernRight(text, color, "pill") end
     end);
 
-    -- A faint line under the header.
+    -- A faint line between the header and the list.
     header.modernDivider = header.modernDivider or header:CreateTexture(nil, "ARTWORK");
     header.modernDivider:SetColorTexture(1, 1, 1, 0.07);
     header.modernDivider:ClearAllPoints();
-    header.modernDivider:SetPoint("TOPLEFT", header, "BOTTOMLEFT", -10, -5);
-    header.modernDivider:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", 10, -5);
+    if self.db.profile.HeaderPosition == "Bottom" then
+        -- Header below the list: the line goes between the list and the header.
+        header.modernDivider:SetPoint("BOTTOMLEFT", header, "TOPLEFT", -10, 5);
+        header.modernDivider:SetPoint("BOTTOMRIGHT", header, "TOPRIGHT", 10, 5);
+    else
+        header.modernDivider:SetPoint("TOPLEFT", header, "BOTTOMLEFT", -10, -5);
+        header.modernDivider:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", 10, -5);
+    end
     header.modernDivider:SetHeight(1);
     header.modernDivider:Show();
 end
