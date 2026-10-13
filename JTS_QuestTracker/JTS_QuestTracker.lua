@@ -79,6 +79,7 @@ function JQT:GetTrackerSettings()
         growUp = p.GrowUp == true,
         scrollBar = p.ShowScrollBar,
         scrollBarOnHover = p.ScrollBarOnHover,
+        scrollBarAlways = p.ScrollBarAlways == true,
         scrollSpeed = p.ScrollSpeed
     };
 end
