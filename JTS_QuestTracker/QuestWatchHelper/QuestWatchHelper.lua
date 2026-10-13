@@ -1,6 +1,7 @@
 local Compat = LibStub("JTSQTCompat-1.0");
 local QLH = LibStub("JTSQTQuestLogHelper-1.0");
-local helper = LibStub:NewLibrary("JTSQTQuestWatchHelper-1.0", 4);
+local AceEvent = LibStub("AceEvent-3.0");
+local helper = LibStub:NewLibrary("JTSQTQuestWatchHelper-1.0", 5);
 if not helper then return end
 
 --[[
@@ -99,6 +100,50 @@ local function onUserWatchChanged(questID, watched)
     notify({ index = QLH:GetIndexFromQuestID(questID), questID = questID, watched = watched, byUser = true });
 end
 
+-- WoW's own watch list stops at 25 (Constants.QuestWatchConsts.MAX_QUEST_WATCHES). When the player
+-- clicks Track in the quest log and that list is full, Blizzard refuses before AddQuestWatch is ever
+-- called, so we wouldn't hear about it. Ours has no limit: track the quest anyway.
+local function isInBlizzardWatchList(questID)
+    local api = C_QuestLog and C_QuestLog.GetQuestWatchType;
+    if not api then return false end
+
+    local ok, watchType = pcall(api, questID);
+
+    return ok and watchType ~= nil;
+end
+
+local toldAboutLimit = false;
+
+local function onQuestLogTrackClicked(questID)
+    if not questID or not QLH:GetQuest(questID) then return end
+
+    -- Blizzard added or removed it itself (onUserWatchChanged already heard about that).
+    if isInBlizzardWatchList(questID) or helper:IsWatched(questID) then return end
+
+    -- Blizzard only refuses when its list is full; after a removal it has room again.
+    local count = C_QuestLog and C_QuestLog.GetNumQuestWatches and select(2, pcall(C_QuestLog.GetNumQuestWatches));
+    local max = (type(Constants) == "table" and type(Constants.QuestWatchConsts) == "table" and Constants.QuestWatchConsts.MAX_QUEST_WATCHES) or 25;
+    if type(count) ~= "number" or count < max then return end
+
+    -- Refused because WoW's list is full: track it in ours instead.
+    tracked[questID] = true;
+    notify({ index = QLH:GetIndexFromQuestID(questID), questID = questID, watched = true, byUser = true });
+
+    if not toldAboutLimit then
+        toldAboutLimit = true;
+        print("|cff33ff99JTS QT:|r WoW's own tracking list is full (25 quests), so it shows an error, but JTS Quest Tracker is tracking this quest anyway. You can track all 40.");
+    end
+end
+
+local trackHooked = false;
+
+local function hookQuestLogTrack()
+    if trackHooked or type(QuestMapQuestOptions_TrackQuest) ~= "function" then return end
+    trackHooked = true;
+
+    hooksecurefunc("QuestMapQuestOptions_TrackQuest", onQuestLogTrackClicked);
+end
+
 local installed = false;
 
 -- Starts managing the watched set, beginning with the quests the player tracked last session.
@@ -114,6 +159,12 @@ function helper:BypassWatchLimit(initialTrackedQuests)
     if C_QuestLog then
         pcall(hooksecurefunc, C_QuestLog, "AddQuestWatch", function(questID) onUserWatchChanged(questID, true) end);
         pcall(hooksecurefunc, C_QuestLog, "RemoveQuestWatch", function(questID) onUserWatchChanged(questID, false) end);
+    end
+
+    -- The quest log's Track button (and shift-click), for when WoW's own list is full.
+    pcall(hookQuestLogTrack);
+    if not trackHooked then
+        AceEvent.RegisterEvent(helper, "ADDON_LOADED", function() pcall(hookQuestLogTrack) end);
     end
 
     -- Forget quests that left the log.

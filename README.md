@@ -117,11 +117,13 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
-- **3.0.0-alpha2** (test build, not a release; includes everything in 1.3.0) Modern skin (Appearance > Skin): dark rounded panel, level badges,
+- **3.0.0 alpha** (test builds, not a release; include everything in 1.3.1) Modern skin (Appearance > Skin): dark rounded panel, level badges,
   quest type labels, counts on the right, rounded progress bars, check marks and a "Ready to turn in" pill.
   Highlight Quest Objects (Alerts > Quest Objects): turns on WoW's Interact Key icons and outlines to mark nearby
   quest objects, and puts your own settings back when turned off. Quest item buttons glow and sparkle when your
   target is in range. Quest icons on the nameplates of enemies you still need.
+- **1.3.1** Fixed: you couldn't track more than 25 quests from the quest log. WoW's own tracking list stops at 25;
+  JTS Quest Tracker now tracks the quest anyway (WoW still flashes its error once), so you can track all 40.
 - **1.3.0** Party progress: group members who also use JTS Quest Tracker see each other's progress on shared
   quests (hidden addon messages, nothing in chat). Rewards (XP, money, items, choices) in the quest tooltip. Turn-in
   XP in the header (`3 ready · 4,250 XP`). Welcome screen on first login, with checkboxes for the features people
