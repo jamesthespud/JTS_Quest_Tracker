@@ -429,6 +429,16 @@ local function windowCategory()
                 arg = "LockInCombat", type = "toggle", width = 1.2,
                 set = function(info, value) SetInDB(info, value); JQT:ApplyLock(); end,
                 disabled = On("LockFrame") },
+            growUp = O{ name = "Grow Upwards",
+                desc = "Keeps the tracker's bottom edge where it is and lets it grow up as you pick up quests, instead of growing down. Handy if you keep the tracker near the bottom of the screen.\n\nThe tracker doesn't move when you switch this; Position Y then means its bottom edge.",
+                arg = "GrowUp", type = "toggle", width = 1.2,
+                set = function(info, value)
+                    SetInDB(info, value);
+                    if JQT.tracker then
+                        local p = JQT.db.profile;
+                        p.PositionX, p.PositionY = JQT.tracker:SetGrowUp(value);
+                    end
+                end },
             spacer0 = Spacer(),
             positionX = Position("PositionX", "x", math.ceil(GetScreenWidth())),
             positionY = Position("PositionY", "y", math.ceil(GetScreenHeight())),
