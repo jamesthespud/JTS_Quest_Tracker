@@ -154,6 +154,10 @@ function Frame:UpdateSettings(settings)
         self:SetScrollBarOnHover(settings.scrollBarOnHover);
     end
 
+    if settings.scrollBarAlways ~= nil then
+        self:SetScrollBarAlways(settings.scrollBarAlways);
+    end
+
     if settings.scrollSpeed ~= nil then
         self:SetScrollSpeed(settings.scrollSpeed);
     end
@@ -455,13 +459,23 @@ function Frame:_hideScrollBar()
 end
 
 -- Keeps the bar visible for a moment, then fades it away.
+-- Always Show Scroll Bar: whenever there is something to scroll, the bar stays (no fading).
+function Frame:SetScrollBarAlways(always)
+    self.scrollBarAlways = always and true or false;
+
+    if self.content then self:_updateScrollBar(false) end
+end
+
 function Frame:_scheduleScrollBarFade()
     if self.scrollBarTimer then
         self.scrollBarTimer:Cancel();
+        self.scrollBarTimer = nil;
     end
 
     local bar = self.scrollBar;
     bar:SetAlpha(1);
+
+    if self.scrollBarAlways then return end
 
     self.scrollBarTimer = C_Timer.NewTimer(SCROLLBAR_VISIBLE_SECONDS, function()
         self.scrollBarTimer = nil;
@@ -512,7 +526,7 @@ function Frame:_updateScrollBar(reveal)
     self.scrollTrackHeight = trackHeight;
     self.scrollThumbHeight = thumbHeight;
 
-    if reveal then
+    if reveal or self.scrollBarAlways then
         bar:Show();
 
         if self.scrollDragging or self.scrollBarHovered or self.scrollHoverActive then

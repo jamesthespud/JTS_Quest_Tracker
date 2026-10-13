@@ -22,7 +22,7 @@ grouped, how it looks and where it sits on screen.
 - **Thin progress bars.** Optional slim bar under counted objectives such as 3/10, 2 to 6 pixels thick.
 - **Text outline and shadow.** Choose no outline, outline or thick outline, and default, strong or no shadow.
 - **Show/hide command and key binding.** `/jtsqt toggle`, `/jtsqt show`, `/jtsqt hide`, or bind a key under Esc > Options > Key Bindings > AddOns.
-- **Draggable scroll bar**, optionally visible while the mouse is over the tracker, and an adjustable **Scroll Speed** for the mouse wheel.
+- **Draggable scroll bar**, optionally visible while the mouse is over the tracker or all the time (Always Show Scroll Bar), and an adjustable **Scroll Speed** for the mouse wheel.
 - **Zone grouping.** Quests sit under collapsible zone headers. Your current zone comes first, the rest follow A to Z.
 - **Show Quest Level.** Optionally show `[12] Quest Name` or `Quest Name (12)`.
 - **Clearer difficulty colors** and **no tracking limit**.
@@ -125,7 +125,7 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   quests (hidden addon messages, nothing in chat). Rewards (XP, money, items, choices) in the quest tooltip. Turn-in
   XP in the header (`3 ready · 4,250 XP`). Welcome screen on first login, with checkboxes for the features people
   might miss (`/jtsqt welcome`). Grow Upwards: the bottom edge stays put and the tracker grows up. Keep Header in View: the header
-  stays pinned to the top while you scroll. Announce to Party is now on by default, in the new Alerts > Your Group section.
+  stays pinned to the top while you scroll. Always Show Scroll Bar. Announce to Party is now on by default, in the new Alerts > Your Group section.
 - **1.2.5b** Dungeon Quests Only and Raid Quests Only (on by default): inside a dungeon or raid, only its kind of
   quests are listed. Fixed "ADDON_ACTION_BLOCKED ... Button:SetPassThroughButtons()" in combat with the world map
   open (focus and tracking changes now wait until combat ends and the map is closed).

@@ -112,6 +112,7 @@ CONSTANTS.DB_DEFAULTS = {
         ShowQuestRewards = true,
         TurnInXPSummary = true,
         StickyHeader = true,
+        ScrollBarAlways = false,
         CombatVisibility = "Show",
         CombatFadeAlpha = 0.35,
         HideInDungeons = false,
