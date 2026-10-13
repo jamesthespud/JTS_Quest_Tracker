@@ -76,6 +76,7 @@ function JQT:GetTrackerSettings()
         backgroundColor = p.BackgroundColor,
         backgroundVisible = p.BackgroundAlwaysVisible or p.DeveloperMode,
         locked = self:IsTrackerLocked(),
+        growUp = p.GrowUp == true,
         scrollBar = p.ShowScrollBar,
         scrollBarOnHover = p.ScrollBarOnHover,
         scrollSpeed = p.ScrollSpeed

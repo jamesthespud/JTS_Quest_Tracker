@@ -129,6 +129,11 @@ function Frame:UpdateSettings(settings)
         self:SetBackgroundColor(settings.backgroundColor);
     end
 
+    -- Before the position: it says which edge the position is for.
+    if settings.growUp ~= nil then
+        self.growUp = settings.growUp and true or false;
+    end
+
     if settings.position ~= nil then
         self:SetPosition(settings.position.x, settings.position.y);
     end
@@ -168,10 +173,30 @@ function Frame:SetBackgroundColor(backgroundColor)
     self.background:SetBackgroundColor(backgroundColor);
 end
 
--- Offset of our top right corner from UIParent's top right corner (what SetPosition expects).
+-- Grow Upwards: the bottom edge stays put and the tracker grows up from it, instead of the top
+-- edge staying put and the tracker growing down. The position is then that of the bottom edge.
+function Frame:IsGrowingUp()
+    return self.growUp == true;
+end
+
+-- Switches which edge stays put without moving the tracker on screen. Returns the new position.
+function Frame:SetGrowUp(growUp)
+    growUp = growUp and true or false;
+    if growUp == self:IsGrowingUp() then return self:GetPosition() end
+
+    self.growUp = growUp;
+
+    local x, y = self:GetPosition(); -- read for the new edge, from where the frame is now
+    self:SetPosition(x, y);
+
+    return x, y;
+end
+
+-- Offset of our top right corner (bottom right when growing up) from UIParent's top right corner
+-- (what SetPosition expects).
 function Frame:GetPosition()
     local x = self:GetRight();
-    local y = self:GetTop();
+    local y = self:IsGrowingUp() and self:GetBottom() or self:GetTop();
 
     local parentRight = UIParent:GetRight() or GetScreenWidth();
     local parentTop = UIParent:GetTop() or GetScreenHeight();
@@ -200,7 +225,7 @@ function Frame:SetPosition(x, y)
     end
 
     self:ClearAllPoints();
-    self:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", x, y);
+    self:SetPoint(self:IsGrowingUp() and "BOTTOMRIGHT" or "TOPRIGHT", UIParent, "TOPRIGHT", x, y);
 
     self.position = { x = x, y = y };
 end
