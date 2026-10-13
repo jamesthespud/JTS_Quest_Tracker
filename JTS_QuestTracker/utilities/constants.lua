@@ -111,6 +111,7 @@ CONSTANTS.DB_DEFAULTS = {
         PartyProgress = true,
         ShowQuestRewards = true,
         TurnInXPSummary = true,
+        StickyHeader = true,
         CombatVisibility = "Show",
         CombatFadeAlpha = 0.35,
         HideInDungeons = false,

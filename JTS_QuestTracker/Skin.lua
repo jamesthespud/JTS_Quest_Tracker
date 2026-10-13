@@ -424,6 +424,32 @@ local function styleTrackerHeader(self, trackerContainer, visible, questCount)
     header.modernDivider:Show();
 end
 
+-- The pinned header copy (StickyHeader.lua) looks like the real header.
+function JQT:StyleStickyHeader(sticky, visible, questCount)
+    local font = sticky.text;
+
+    font:ModernReset();
+    font:ModernLayout();
+
+    if not self:IsModernSkin() then return end
+
+    local label = JQTL:GetString('QT_QUESTS'):upper();
+    local summary = self.db.profile.TurnInXPSummary and self.GetTurnInSummaryText and self:GetTurnInSummaryText();
+    if summary then label = label .. "  " .. self:GetStatusColorCode("complete") .. summary .. "|r" end
+
+    font:SetLabel(label);
+    font:SetColor(TEXT);
+    font:SetHoverColor(TEXT);
+    font:ModernAccent(accent());
+
+    local text, color = headerCount(self, visible, questCount);
+    if text then font:ModernRight(text, color, "pill") end
+
+    local opacity = tonumber(self.db.profile.ModernOpacity) or 0.88;
+    sticky.bg:SetColorTexture(PANEL.r, PANEL.g, PANEL.b, math.max(opacity, 0.92));
+    sticky:SetHeight((font:GetRealHeight() or 12) + 14);
+end
+
 local function styleZoneHeader(self, zone, questsInZone)
     local header = self.questsContainer.elements[#self.questsContainer.elements - 1];
     local font = header and header.elements and header.elements[1];
