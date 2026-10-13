@@ -64,6 +64,11 @@ local function build(tracker)
     return sticky;
 end
 
+-- Is the header below the list? (Defined before everything that uses it.)
+local function atBottom()
+    return JQT.db.profile.HeaderPosition == "Bottom";
+end
+
 -- Fills in the copy from the current settings and the counts the header was drawn with.
 local function fill()
     local p = JQT.db.profile;
@@ -80,10 +85,6 @@ local function fill()
 
     -- Skins (Skin.lua) can restyle the copy like the real header.
     if JQT.StyleStickyHeader then pcall(JQT.StyleStickyHeader, JQT, sticky, headerArgs[1], headerArgs[2]) end
-end
-
-local function atBottom()
-    return JQT.db.profile.HeaderPosition == "Bottom";
 end
 
 -- Pinned to the top of the tracker, or to the bottom when the header sits below the list.
