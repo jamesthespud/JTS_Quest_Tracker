@@ -38,3 +38,4 @@ Distance.lua
 Rewards.lua
 PartyProgress.lua
 Welcome.lua
+StickyHeader.lua

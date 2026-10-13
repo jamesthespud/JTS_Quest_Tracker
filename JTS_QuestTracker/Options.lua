@@ -282,7 +282,7 @@ local function appearanceCategory()
             spacer3 = Spacer(1.1),
             fontColor = FontColor("TrackerHeaderFontColor", Off("TrackerHeaderEnabled")),
             spacer4 = Spacer(),
-        }, Extra("logWarningOptions", "turnInOptions")),
+        }, Extra("logWarningOptions", "turnInOptions", "stickyHeaderOptions")),
 
         zoneHeaderSettings = Group("Zone Headers", {
             enabled = O{ name = L('SETTINGS_ENABLED_NAME'), desc = L('SETTINGS_ZONE_HEADER_ENABLED_DESC'),
