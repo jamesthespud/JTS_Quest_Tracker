@@ -465,7 +465,7 @@ local function sampleQuests()
             { objectives = { sampleObjective("Sapphire of Aku'Mai: 5/20", 5, 20) }, sampleDistance = 85 }),
         -- No objectives, summary only
         [1196] = sampleQuest(2, 1196, "The Sacred Flame", "Thunder Bluff", 29, 1,
-            { summary = "Deliver the Filled Etched Phial to Rau Cliffrunner at the Freewind Post." }),
+            { summary = "Deliver the Filled Etched Phial to Rau Cliffrunner at the Freewind Post.", sampleForever = true }),
         -- Multiple objectives, partially completed
         -- Timed (shows "Time left")
         [4841] = sampleQuest(3, 4841, "Pacify the Centaur", "Thousand Needles", 25, 0.5714, { sampleTimeLeft = 754, sampleDistance = 240, objectives = {

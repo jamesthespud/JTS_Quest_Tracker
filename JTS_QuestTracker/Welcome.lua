@@ -101,6 +101,12 @@ local FEATURES = {
         set = function(v) p().ShowQuestTimers = v; refresh() end
     },
     {
+        title = "Mark New Forever Quests",
+        text = "A blue infinity symbol on quests that are new in WoW Forever.",
+        get = function() return p().ShowForeverMarker ~= false end,
+        set = function(v) p().ShowForeverMarker = v; refresh() end
+    },
+    {
         title = "Minimap Button",
         text = "Left-click for settings, right-click to show or hide the tracker.",
         get = function() return not (p().MinimapIcon and p().MinimapIcon.hide) end,
