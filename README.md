@@ -45,7 +45,7 @@ grouped, how it looks and where it sits on screen.
 - **Ready to Turn In placement.** Put finished quests first or last instead of wherever your sorting puts them (Filters & Sorting > Sorting).
 - **Quest timers.** Timed quests show `Time left: 4:32` under their name, counting down and turning red in the last minute.
 - **Distance without Questie.** Sort by Quest Proximity now uses WoW Forever's own quest helper (the same distance its quest arrow shows), with Questie only filling in quests the game has no location for. Optional **Show Distance** puts `120 yd` after each quest name (Appearance > Quest Names).
-- **Share quests with your group.** Right-click the tracker header for Share All Quests, or a zone header to share just that zone's quests (`/jtsqt share` too). They go out one every 3 seconds so your group can take each one.
+- **Share quests with your group.** Right-click the tracker header for Share All Quests, or a zone header to share just that zone's quests (`/jtsqt share` too). They go out one every 3 seconds so your group can take each one. In a group, dungeon and raid headers (like Wailing Caverns) also get a **Share all** button.
 - **Welcome screen.** On first login a short tour lists the features you might not know about, each with a checkbox to turn it on or off. `/jtsqt welcome` (or Advanced > Welcome Screen) opens it again.
 - **New Forever quests marked.** Quests that are new in WoW Forever get a small blue infinity symbol in front of their name and a "New in WoW Forever" line in their tooltip (Appearance > Quest Names).
 - **Party progress.** Group members who also use JTS Quest Tracker see each other's progress on shared quests, right under their own (`Mike  5/8`) and in the quest tooltip. Only quest IDs and counts are shared, through hidden addon messages. Settings: Alerts > Your Group.
@@ -123,7 +123,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   might miss (`/jtsqt welcome`). Grow Upwards: the bottom edge stays put and the tracker grows up, with
   Header Position Top / Bottom (Bottom by default with Grow Upwards). Keep Header in View: the header
   stays pinned to the top while you scroll. Always Show Scroll Bar. Blue infinity
-  symbol on quests that are new in WoW Forever. Announce to Party is now on by default, in the new Alerts > Your Group section.
+  symbol on quests that are new in WoW Forever. Share all button on dungeon and raid headers in a group. The
+  welcome screen groups its features into Questing, Group and Tracker, with tips. Announce to Party is now on by default, in the new Alerts > Your Group section.
 - **1.2.5b** Dungeon Quests Only and Raid Quests Only (on by default): inside a dungeon or raid, only its kind of
   quests are listed. Fixed "ADDON_ACTION_BLOCKED ... Button:SetPassThroughButtons()" in combat with the world map
   open (focus and tracking changes now wait until combat ends and the map is closed).
