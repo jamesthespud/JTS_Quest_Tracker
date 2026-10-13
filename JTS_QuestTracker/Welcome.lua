@@ -4,7 +4,8 @@ local _, ns = ...
     Welcome screen.
 
     Shown once (per account) the first time this version of JTS Quest Tracker loads, and any time with
-    /jtsqt welcome or the button in Advanced. It lists the features people might not know about, each
+    /jtsqt welcome or the button in Advanced. It walks through the features people might not know
+    about, one section per page (Questing, Group, Tracker; Next / Back, Finish on the last page), each
     with a checkbox that turns it on or off right there.
 
     Other files can add rows or sections with JQT:AddWelcomeSection(section) (the V3 skin picker does).
@@ -12,8 +13,7 @@ local _, ns = ...
 
 local JQT = JTS_QuestTracker;
 
-local WIDTH, HEIGHT = 860, 520;
-local COLUMNS = 3;
+local WIDTH, HEIGHT = 700, 440;
 local GREEN = { r = 0.2, g = 1, b = 0.6 };
 
 local function p() return JQT.db.profile end
@@ -202,6 +202,15 @@ local function featureRow(parent, feature, x, y, width)
     checkboxes[#checkboxes + 1] = { check = check, feature = feature };
 end
 
+-- One page per section; what each page is about.
+local INTROS = {
+    Questing = "Help with finding, tracking and finishing quests.",
+    Group = "For questing with friends and in dungeons.",
+    Tracker = "How the tracker looks and where it sits.",
+};
+
+local TIPS = "|cffffd100Tips:|r middle-click a quest to point WoW's quest arrow at it  ·  right-click quests and headers for menus  ·  Color Blind Mode (all 9 types) is in the settings";
+
 local function build()
     if frame then return frame end
 
@@ -243,7 +252,7 @@ local function build()
     local icon = frame:CreateTexture(nil, "ARTWORK");
     icon:SetTexture("Interface\\AddOns\\JTS_QuestTracker\\Icon");
     icon:SetSize(40, 40);
-    icon:SetPoint("TOPLEFT", 20, -18);
+    icon:SetPoint("TOPLEFT", 24, -20);
 
     local heading = text(frame, 20, GREEN);
     heading:SetPoint("TOPLEFT", icon, "TOPRIGHT", 12, -2);
@@ -251,30 +260,41 @@ local function build()
 
     local version = text(frame, 12, { r = 0.6, g = 0.6, b = 0.6 });
     version:SetPoint("TOPLEFT", heading, "BOTTOMLEFT", 0, -3);
-    version:SetText("Version " .. tostring(ns.CONSTANTS.VERSION) .. "  ·  here's what you can turn on or off. You can change all of it later in the settings.");
+    version:SetText("Version " .. tostring(ns.CONSTANTS.VERSION) .. "  ·  a quick tour of what you can turn on or off. You can change all of it later in the settings.");
 
-    local y = -78;
+    -- Pages: extra sections first (the V3 skin picker), then one per feature section.
+    local pages = {};
+    local top, pageWidth = -86, WIDTH - 48;
 
-    -- Extra sections first (e.g. the skin picker).
-    for _, section in ipairs(sections) do
-        local label = text(frame, 14, NORMAL_FONT_COLOR or { r = 1, g = 0.82, b = 0 });
-        label:SetPoint("TOPLEFT", 20, y);
-        label:SetText(section.title);
-        y = y - 22;
+    local function newPage(title)
+        local page = CreateFrame("Frame", nil, frame);
+        page:SetPoint("TOPLEFT", 24, top);
+        page:SetPoint("BOTTOMRIGHT", -24, 64);
+        page:Hide();
 
-        local holder = CreateFrame("Frame", nil, frame);
-        holder:SetPoint("TOPLEFT", 20, y);
-        holder:SetSize(WIDTH - 40, 10);
+        page.title = text(page, 16, NORMAL_FONT_COLOR or { r = 1, g = 0.82, b = 0 });
+        page.title:SetPoint("TOPLEFT", 0, 0);
+        page.title:SetText(title);
+        page.name = title;
 
-        local ok, height = pcall(section.build, holder, WIDTH - 40);
-        height = ok and tonumber(height) or 0;
-        holder:SetHeight(math.max(1, height));
-        y = y - height - 10;
+        pages[#pages + 1] = page;
+
+        return page;
     end
 
-    -- The features in sections, in columns.
-    local columnWidth = (WIDTH - 40 - (COLUMNS - 1) * 20) / COLUMNS;
-    local rowHeight = 44;
+    for _, section in ipairs(sections) do
+        local page = newPage(section.title);
+
+        local holder = CreateFrame("Frame", nil, page);
+        holder:SetPoint("TOPLEFT", 0, -34);
+        holder:SetSize(pageWidth, 10);
+
+        local ok, height = pcall(section.build, holder, pageWidth);
+        holder:SetHeight(math.max(1, ok and tonumber(height) or 1));
+    end
+
+    local columns, rowHeight = 2, 58;
+    local columnWidth = (pageWidth - (columns - 1) * 28) / columns;
 
     for _, group in ipairs(GROUPS) do
         local members = {};
@@ -283,72 +303,113 @@ local function build()
         end
 
         if #members > 0 then
-            local label = text(frame, 14, NORMAL_FONT_COLOR or { r = 1, g = 0.82, b = 0 });
-            label:SetPoint("TOPLEFT", 20, y);
-            label:SetText(group);
-            y = y - 22;
+            local page = newPage(group);
+
+            local intro = text(page, 12, { r = 0.7, g = 0.7, b = 0.7 });
+            intro:SetPoint("TOPLEFT", page.title, "BOTTOMLEFT", 0, -4);
+            intro:SetText(INTROS[group] or "");
 
             for i, feature in ipairs(members) do
-                local column = (i - 1) % COLUMNS;
-                local row = math.floor((i - 1) / COLUMNS);
-                featureRow(frame, feature, 20 + column * (columnWidth + 20), y - row * rowHeight, columnWidth);
+                local column = (i - 1) % columns;
+                local row = math.floor((i - 1) / columns);
+                featureRow(page, feature, column * (columnWidth + 28), -50 - row * rowHeight, columnWidth);
             end
-
-            y = y - math.ceil(#members / COLUMNS) * rowHeight - 6;
         end
     end
 
-    -- Things a checkbox can't show.
-    local tips = text(frame, 11, { r = 0.75, g = 0.75, b = 0.75 });
-    tips:SetPoint("TOPLEFT", 20, y - 2);
-    tips:SetWidth(WIDTH - 40);
-    tips:SetText("|cffffd100Tips:|r middle-click a quest to point WoW's quest arrow at it  ·  right-click quests and headers for menus  ·  Color Blind Mode (all 9 types) is in the settings");
-    y = y - 34;
-
-    -- Tall enough for everything above, plus the footer; smaller screens get a smaller window.
-    local height = -y + 80;
-    frame:SetHeight(height);
-
-    local screenHeight = UIParent and UIParent:GetHeight();
-    if type(screenHeight) == "number" and screenHeight > 0 and height > screenHeight * 0.92 then
-        frame:SetScale(screenHeight * 0.92 / height);
+    -- Tips on the last page.
+    local last = pages[#pages];
+    if last then
+        local tips = text(last, 11, { r = 0.75, g = 0.75, b = 0.75 });
+        tips:SetPoint("BOTTOMLEFT", 0, 4);
+        tips:SetWidth(pageWidth);
+        tips:SetText(TIPS);
     end
 
-    -- Footer
+    -- Footer: settings on the left, where you are in the middle, Back / Next on the right.
     local settings = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
-    settings:SetSize(150, 24);
-    settings:SetPoint("BOTTOMLEFT", 20, 16);
+    settings:SetSize(130, 24);
+    settings:SetPoint("BOTTOMLEFT", 24, 20);
     settings:SetText("All Settings");
     settings:SetScript("OnClick", function()
         frame:Hide();
         JQT:ToggleOptions();
     end);
 
-    local done = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
-    done:SetSize(120, 24);
-    done:SetPoint("BOTTOMRIGHT", -20, 16);
-    done:SetText("Done");
-    done:SetScript("OnClick", function() frame:Hide() end);
+    local nextButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
+    nextButton:SetSize(110, 24);
+    nextButton:SetPoint("BOTTOMRIGHT", -24, 20);
 
-    local hint = text(frame, 11, { r = 0.55, g = 0.55, b = 0.55 }, "CENTER");
-    hint:SetPoint("BOTTOM", 0, 22);
-    hint:SetText("/jtsqt welcome shows this again");
+    local backButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
+    backButton:SetSize(90, 24);
+    backButton:SetPoint("RIGHT", nextButton, "LEFT", -8, 0);
+    backButton:SetText("Back");
+
+    local steps = text(frame, 12, { r = 0.55, g = 0.55, b = 0.55 }, "CENTER");
+    steps:SetPoint("BOTTOM", 0, 26);
 
     local credit = text(frame, 10, { r = 0.45, g = 0.45, b = 0.45 }, "CENTER");
-    credit:SetPoint("BOTTOM", 0, 50);
+    credit:SetPoint("BOTTOM", 0, 6);
     credit:SetWidth(WIDTH - 40);
-    credit:SetText("James's own fork of Butter Quest Tracker by Butter Cookie Kitkat (MIT). Not affiliated with the original author.");
+    credit:SetText("James's own fork of Butter Quest Tracker by Butter Cookie Kitkat (MIT). Not affiliated with the original author.  ·  /jtsqt welcome shows this again");
+
+    local current = 1;
+
+    local function showPage(index)
+        current = math.max(1, math.min(#pages, index));
+
+        for i, page in ipairs(pages) do
+            if i == current then page:Show() else page:Hide() end
+        end
+
+        local names = {};
+        for i, page in ipairs(pages) do
+            names[i] = i == current and ("|cff33ff99" .. page.name .. "|r") or page.name;
+        end
+        steps:SetText(table.concat(names, "   ·   "));
+
+        if current > 1 then backButton:Show() else backButton:Hide() end
+        nextButton:SetText(current < #pages and "Next" or "Finish");
+    end
+
+    nextButton:SetScript("OnClick", function()
+        if current < #pages then showPage(current + 1) else frame:Hide() end
+    end);
+    backButton:SetScript("OnClick", function() showPage(current - 1) end);
+
+    frame.ShowPage = function(_, index) showPage(index) end;
+    frame.GetPage = function() return current, #pages end;
+
+    -- Tall enough for the biggest page, smaller on small screens.
+    local tallest = 0;
+    for _, group in ipairs(GROUPS) do
+        local n = 0;
+        for _, feature in ipairs(FEATURES) do if feature.group == group then n = n + 1 end end
+        tallest = math.max(tallest, math.ceil(n / columns));
+    end
+
+    local height = 86 + 50 + tallest * rowHeight + 40 + 64;
+    frame:SetHeight(math.max(HEIGHT, height));
+
+    local screenHeight = UIParent and UIParent:GetHeight();
+    if type(screenHeight) == "number" and screenHeight > 0 and frame:GetHeight() > screenHeight * 0.92 then
+        frame:SetScale(screenHeight * 0.92 / frame:GetHeight());
+    end
 
     frame:SetScript("OnShow", function()
         for _, entry in ipairs(checkboxes) do
             local ok, value = pcall(entry.feature.get);
             entry.check:SetChecked(ok and value and true or false);
         end
+
+        showPage(1);
     end);
 
     frame:SetScript("OnHide", function()
         JQT.db.global.WelcomeSeen = ns.CONSTANTS.VERSION;
     end);
+
+    showPage(1);
 
     return frame;
 end
