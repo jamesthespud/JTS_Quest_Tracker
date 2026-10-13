@@ -12,7 +12,8 @@ local _, ns = ...
 
 local JQT = JTS_QuestTracker;
 
-local WIDTH, HEIGHT = 680, 520;
+local WIDTH, HEIGHT = 860, 520;
+local COLUMNS = 3;
 local GREEN = { r = 0.2, g = 1, b = 0.6 };
 
 local function p() return JQT.db.profile end
@@ -22,25 +23,25 @@ local function refresh() JQT:RefreshView() end
 -- { title, text, get, set } per feature.
 local FEATURES = {
     {
-        title = "Announce to Party",
+        title = "Announce to Party", group = "Group",
         text = "Your group sees each objective you finish in party chat.",
         get = function() return p().AlertParty end,
         set = function(v) p().AlertParty = v end
     },
     {
-        title = "Party Progress",
+        title = "Party Progress", group = "Group",
         text = "See group members' progress under your quests (they need JTS QT too).",
         get = function() return p().PartyProgress ~= false end,
         set = function(v) p().PartyProgress = v; refresh() end
     },
     {
-        title = "Auto-focus",
+        title = "Auto-focus", group = "Questing",
         text = "WoW's quest arrow follows the quest you just progressed. Middle-click any quest to focus it.",
         get = function() return p().AutoFocusQuest end,
         set = function(v) p().AutoFocusQuest = v end
     },
     {
-        title = "Show Distance",
+        title = "Show Distance", group = "Questing",
         text = "How far away each quest is, like 120 yd, after its name.",
         get = function() return p().ShowQuestDistance end,
         set = function(v)
@@ -50,19 +51,19 @@ local FEATURES = {
         end
     },
     {
-        title = "Rewards in Tooltip",
+        title = "Rewards in Tooltip", group = "Questing",
         text = "Hover a quest to see its XP, money and item rewards.",
         get = function() return p().ShowQuestRewards end,
         set = function(v) p().ShowQuestRewards = v end
     },
     {
-        title = "Turn-in XP",
+        title = "Turn-in XP", group = "Questing",
         text = "The header shows quests ready to turn in and their XP.",
         get = function() return p().TurnInXPSummary end,
         set = function(v) p().TurnInXPSummary = v; refresh() end
     },
     {
-        title = "Quest Item Buttons",
+        title = "Quest Item Buttons", group = "Questing",
         text = "Use a quest's item straight from the tracker.",
         get = function() return p().ShowQuestItems end,
         set = function(v)
@@ -71,7 +72,7 @@ local FEATURES = {
         end
     },
     {
-        title = "Fade in Combat",
+        title = "Fade in Combat", group = "Tracker",
         text = "The tracker turns see-through while you fight.",
         get = function() return p().CombatVisibility == "Fade" end,
         set = function(v)
@@ -80,13 +81,13 @@ local FEATURES = {
         end
     },
     {
-        title = "Dungeon & Raid Quests Only",
+        title = "Dungeon & Raid Quests Only", group = "Group",
         text = "Inside an instance, only its kind of quests are listed.",
         get = function() return p().DungeonQuestsOnly and p().RaidQuestsOnly end,
         set = function(v) p().DungeonQuestsOnly, p().RaidQuestsOnly = v, v; refresh() end
     },
     {
-        title = "Expand Current Zone Only",
+        title = "Expand Current Zone Only", group = "Tracker",
         text = "Your zone opens and the others fold away as you travel.",
         get = function() return p().ExpandCurrentZoneOnly end,
         set = function(v)
@@ -95,19 +96,50 @@ local FEATURES = {
         end
     },
     {
-        title = "Quest Timers",
+        title = "Quest Timers", group = "Questing",
         text = "Timed quests count down under their name.",
         get = function() return p().ShowQuestTimers end,
         set = function(v) p().ShowQuestTimers = v; refresh() end
     },
     {
-        title = "Mark New Forever Quests",
+        title = "Mark New Forever Quests", group = "Questing",
         text = "A blue infinity symbol on quests that are new in WoW Forever.",
         get = function() return p().ShowForeverMarker ~= false end,
         set = function(v) p().ShowForeverMarker = v; refresh() end
     },
     {
-        title = "Minimap Button",
+        title = "Share All on Dungeon Headers", group = "Group",
+        text = "In a group, dungeon and raid headers get a Share all button.",
+        get = function() return p().ShareAllOnInstanceHeaders ~= false end,
+        set = function(v) p().ShareAllOnInstanceHeaders = v; refresh() end
+    },
+    {
+        title = "Grow Upwards", group = "Tracker",
+        text = "For a tracker near the bottom of the screen: it grows up, header below.",
+        get = function() return p().GrowUp end,
+        set = function(v) JQT:SetGrowUpwards(v) end
+    },
+    {
+        title = "Keep Header in View", group = "Tracker",
+        text = "The header with your counts stays pinned while you scroll.",
+        get = function() return p().StickyHeader ~= false end,
+        set = function(v)
+            p().StickyHeader = v;
+            if JQT.UpdateStickyHeader then JQT:UpdateStickyHeader() end
+        end
+    },
+    {
+        title = "Always Show Scroll Bar", group = "Tracker",
+        text = "The scroll bar stays up instead of fading (long lists only).",
+        get = function() return p().ShowScrollBar and p().ScrollBarAlways end,
+        set = function(v)
+            p().ScrollBarAlways = v;
+            if v then p().ShowScrollBar = true end
+            if JQT.tracker then JQT.tracker:UpdateSettings({ scrollBar = p().ShowScrollBar, scrollBarAlways = v }) end
+        end
+    },
+    {
+        title = "Minimap Button", group = "Tracker",
         text = "Left-click for settings, right-click to show or hide the tracker.",
         get = function() return not (p().MinimapIcon and p().MinimapIcon.hide) end,
         set = function(v)
@@ -117,6 +149,9 @@ local FEATURES = {
         end
     },
 };
+
+-- The order of the sections.
+local GROUPS = { "Questing", "Group", "Tracker" };
 
 -- Extra sections from other files: { title = ..., build = function(parent, width) return height end }
 local sections = {};
@@ -146,6 +181,7 @@ end
 local function featureRow(parent, feature, x, y, width)
     local check = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate");
     check:SetSize(24, 24);
+    check.feature = feature;
     check:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y);
     check:SetScript("OnClick", function(self)
         local on = self:GetChecked() and true or false;
@@ -236,23 +272,47 @@ local function build()
         y = y - height - 10;
     end
 
-    local label = text(frame, 14, NORMAL_FONT_COLOR or { r = 1, g = 0.82, b = 0 });
-    label:SetPoint("TOPLEFT", 20, y);
-    label:SetText("Features");
-    y = y - 24;
+    -- The features in sections, in columns.
+    local columnWidth = (WIDTH - 40 - (COLUMNS - 1) * 20) / COLUMNS;
+    local rowHeight = 44;
 
-    -- Two columns.
-    local columnWidth = (WIDTH - 60) / 2;
-    local rowHeight = 50;
+    for _, group in ipairs(GROUPS) do
+        local members = {};
+        for _, feature in ipairs(FEATURES) do
+            if feature.group == group then members[#members + 1] = feature end
+        end
 
-    for i, feature in ipairs(FEATURES) do
-        local column = (i - 1) % 2;
-        local row = math.floor((i - 1) / 2);
-        featureRow(frame, feature, 20 + column * (columnWidth + 20), y - row * rowHeight, columnWidth);
+        if #members > 0 then
+            local label = text(frame, 14, NORMAL_FONT_COLOR or { r = 1, g = 0.82, b = 0 });
+            label:SetPoint("TOPLEFT", 20, y);
+            label:SetText(group);
+            y = y - 22;
+
+            for i, feature in ipairs(members) do
+                local column = (i - 1) % COLUMNS;
+                local row = math.floor((i - 1) / COLUMNS);
+                featureRow(frame, feature, 20 + column * (columnWidth + 20), y - row * rowHeight, columnWidth);
+            end
+
+            y = y - math.ceil(#members / COLUMNS) * rowHeight - 6;
+        end
     end
 
-    -- Tall enough for everything above, plus the footer.
-    frame:SetHeight(-y + math.ceil(#FEATURES / 2) * rowHeight + 80);
+    -- Things a checkbox can't show.
+    local tips = text(frame, 11, { r = 0.75, g = 0.75, b = 0.75 });
+    tips:SetPoint("TOPLEFT", 20, y - 2);
+    tips:SetWidth(WIDTH - 40);
+    tips:SetText("|cffffd100Tips:|r middle-click a quest to point WoW's quest arrow at it  ·  right-click quests and headers for menus  ·  Color Blind Mode (all 9 types) is in the settings");
+    y = y - 34;
+
+    -- Tall enough for everything above, plus the footer; smaller screens get a smaller window.
+    local height = -y + 80;
+    frame:SetHeight(height);
+
+    local screenHeight = UIParent and UIParent:GetHeight();
+    if type(screenHeight) == "number" and screenHeight > 0 and height > screenHeight * 0.92 then
+        frame:SetScale(screenHeight * 0.92 / height);
+    end
 
     -- Footer
     local settings = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");

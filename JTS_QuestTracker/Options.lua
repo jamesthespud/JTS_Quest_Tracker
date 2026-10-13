@@ -145,6 +145,21 @@ function JQT:AddOptionsTab(key, builder)
     self.optionsTabs[key] = builder;
 end
 
+-- Grow Upwards: keeps the tracker in place on screen and puts the header on the edge that stays
+-- still (the player can move it back with Header Position). Used by the option and the welcome screen.
+function JQT:SetGrowUpwards(value)
+    local p = self.db.profile;
+    p.GrowUp = value and true or false;
+
+    if self.tracker then
+        p.PositionX, p.PositionY = self.tracker:SetGrowUp(p.GrowUp);
+    end
+
+    p.HeaderPosition = p.GrowUp and "Bottom" or "Top";
+
+    if self.tracker then self:RefreshView() end
+end
+
 -- ---------------------------------------------------------------------------
 -- The options
 -- ---------------------------------------------------------------------------
@@ -432,17 +447,7 @@ local function windowCategory()
             growUp = O{ name = "Grow Upwards",
                 desc = "Keeps the tracker's bottom edge where it is and lets it grow up as you pick up quests, instead of growing down. Handy if you keep the tracker near the bottom of the screen.\n\nThe tracker doesn't move when you switch this; Position Y then means its bottom edge.",
                 arg = "GrowUp", type = "toggle", width = 1.2,
-                set = function(info, value)
-                    SetInDB(info, value);
-                    if JQT.tracker then
-                        local p = JQT.db.profile;
-                        p.PositionX, p.PositionY = JQT.tracker:SetGrowUp(value);
-
-                        -- The header goes where the tracker stays still (you can change it back).
-                        p.HeaderPosition = value and "Bottom" or "Top";
-                        JQT:RefreshView();
-                    end
-                end },
+                set = function(_, value) JQT:SetGrowUpwards(value) end },
             headerPosition = O{ name = "Header Position",
                 desc = "|cffffffffTop|r: the header sits above the list.\n|cffffffffBottom|r: the header sits below the list. With Grow Upwards that is the edge that stays still, so the header never moves on screen.\n\nTurning Grow Upwards on or off sets this for you; you can still change it.",
                 arg = "HeaderPosition", type = "select", width = 0.9,

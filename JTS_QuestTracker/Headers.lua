@@ -6,7 +6,8 @@ local _, ns = ...
       - right-click menus: Collapse All, Expand All, Share All Quests / Share This Zone's Quests, Settings
       - Expand Current Zone Only: when you change zones, your zone opens and the others fold away
       - quest log full warning after the header count:  Quests (10/40)  Log 37/40
-      - sharing quests with your group, one at a time
+      - sharing quests with your group, one at a time, and a "Share all" button on dungeon and raid
+        zone headers while you are in a group
 ]]
 
 local JQT = JTS_QuestTracker;
@@ -156,6 +157,9 @@ function JQT:StopSharingQuests()
     if shareTicker then
         shareTicker:Cancel();
         shareTicker = nil;
+
+        -- Bring back the "Share all" buttons.
+        if self.tracker then C_Timer.After(0.5, function() JQT:RefreshView() end) end
     end
 end
 
@@ -204,6 +208,119 @@ function JQT:ShareQuests(zone)
         shareTicker = C_Timer.NewTicker(SHARE_GAP, shareNext);
     end
 end
+
+-- ---------------------------------------------------------------------------
+-- "Share all" on dungeon and raid headers
+-- ---------------------------------------------------------------------------
+
+local INSTANCE_TAGS = { dungeon = true, heroic = true, raid = true };
+
+-- Does this zone header hold dungeon or raid quests you can share right now?
+local function canShareInstanceZone(self, zone)
+    if not inGroup() or self:IsSharingQuests() then return false end
+
+    local isInstance, shareable = false, false;
+
+    for questID, quest in pairs(QLH:GetQuests()) do
+        if quest.zone == zone then
+            local ok, tag = pcall(self.GetQuestTag, self, quest);
+            if ok and tag and INSTANCE_TAGS[tag.kind] then isInstance = true end
+            if not quest.failed and Compat:IsQuestPushable(questID) then shareable = true end
+        end
+    end
+
+    return isInstance and shareable;
+end
+
+local SHARE_TEXT = "Share all";
+local GOLD = { r = 1, g = 0.82, b = 0 };
+
+local function shareButton(header)
+    local button = header.jtsShareButton;
+    if button then return button end
+
+    button = CreateFrame("Button", nil, header);
+    button:SetFrameLevel((header:GetFrameLevel() or 0) + 3);
+    button.label = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall");
+    button.label:SetPoint("RIGHT", button, "RIGHT", 0, 0);
+    button.label:SetText(SHARE_TEXT);
+
+    button:SetScript("OnEnter", function(self)
+        self.label:SetTextColor(1, 1, 1);
+        GameTooltip:SetOwner(self, "ANCHOR_TOP");
+        GameTooltip:AddLine("Share all " .. tostring(self.zone) .. " quests with your group");
+        GameTooltip:Show();
+    end);
+    button:SetScript("OnLeave", function(self)
+        self.label:SetTextColor(GOLD.r, GOLD.g, GOLD.b);
+        GameTooltip:Hide();
+    end);
+    button:SetScript("OnClick", function(self)
+        JQT:ShareQuests(self.zone);
+        self:Hide();
+    end);
+
+    header.jtsShareButton = button;
+
+    return button;
+end
+
+-- Every redraw hands out pooled rows: no button unless this header asks for one again.
+local containerAcquire = JTS_QuestTrackerContainer.OnAcquire;
+function JTS_QuestTrackerContainer:OnAcquire(...)
+    containerAcquire(self, ...);
+    if self.jtsShareButton then self.jtsShareButton:Hide() end
+end
+
+local addZone = JQT.AddZone;
+
+function JQT:AddZone(zone, questsInZone, ...)
+    local zoneContainer = addZone(self, zone, questsInZone, ...);
+
+    if self.db.profile.ShareAllOnInstanceHeaders ~= false and canShareInstanceZone(self, zone) then
+        local header = self.questsContainer.elements[#self.questsContainer.elements - 1];
+        local font = header and header.elements and header.elements[1];
+
+        if font and font.type == "font" then
+            local button = shareButton(header);
+            button.zone = zone;
+
+            local _, size, flags = font.font:GetFont();
+            local path = button.label:GetFont();
+            button.label:SetFont(path, math.max(8, (size or 12) - 2), flags);
+            button.label:SetTextColor(GOLD.r, GOLD.g, GOLD.b);
+
+            local width = math.ceil(button.label:GetStringWidth()) + 4;
+            button:SetSize(width, math.ceil(size or 12) + 2);
+            button:ClearAllPoints();
+            button:SetPoint("TOPRIGHT", header, "TOPRIGHT", 0, 0);
+            button:Show();
+
+            -- Keep the zone name clear of the button (Skin.lua can move both).
+            local before = font:GetFullHeight();
+            font.shareReserve = width + 6;
+            font.font:SetPoint("RIGHT", -font.shareReserve, 0);
+            font:SetHeight(font:_textHeight());
+
+            local delta = font:GetFullHeight() - before;
+            if delta ~= 0 then font:UpdateParentsHeight(delta) end
+        end
+    end
+
+    return zoneContainer;
+end
+
+-- The buttons only make sense in a group: redraw when you join or leave one.
+local wasInGroup;
+local groupEvents = CreateFrame("Frame");
+pcall(groupEvents.RegisterEvent, groupEvents, "GROUP_ROSTER_UPDATE");
+groupEvents:SetScript("OnEvent", function()
+    local now = inGroup();
+    if now ~= wasInGroup then
+        wasInGroup = now;
+        if JQT.tracker then JQT:RefreshView() end
+    end
+end);
 
 -- ---------------------------------------------------------------------------
 -- Right-click menus
@@ -288,6 +405,11 @@ JQT.zoneOptions = function()
                 JQT:ExpandCurrentZoneOnly(true);
             end,
             disabled = function() return not JQT.db.profile.ZoneHeaderEnabled end
+        },
+        shareAll = {
+            name = "Share All on Dungeon Headers", order = 1.5, width = 1.6,
+            desc = "In a group, zone headers with dungeon or raid quests (like Wailing Caverns) get a |cffffd100Share all|r button that shares every one of those quests with your group.",
+            type = "toggle", arg = "ShareAllOnInstanceHeaders", set = set
         },
         collapseAll = {
             name = "Collapse All", type = "execute", width = 0.7, order = 2,
