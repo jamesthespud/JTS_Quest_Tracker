@@ -593,6 +593,59 @@ function JQT:AddQuest(quest, parent, ...)
 end
 
 -- ---------------------------------------------------------------------------
+-- Welcome screen: pick a look
+-- ---------------------------------------------------------------------------
+
+if JQT.AddWelcomeSection then
+    JQT:AddWelcomeSection({
+        title = "Look",
+        build = function(parent, width)
+            local choices = {
+                { key = "Classic", text = "The tracker as it has always looked." },
+                { key = "Modern", text = "Dark rounded panel, level badges, counts on the right." },
+            };
+            local buttons = {};
+            local half = (width - 20) / 2;
+
+            local function refresh()
+                for _, b in ipairs(buttons) do
+                    local selected = (JQT.db.profile.Skin or "Classic") == b.key;
+                    b:SetText(selected and (b.key .. "  |TInterface\\RaidFrame\\ReadyCheck-Ready:0|t") or b.key);
+                end
+            end
+
+            for i, choice in ipairs(choices) do
+                local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate");
+                button:SetSize(140, 24);
+                button:SetPoint("TOPLEFT", parent, "TOPLEFT", (i - 1) * (half + 20), 0);
+                button.key = choice.key;
+                button:SetScript("OnClick", function()
+                    JQT.db.profile.Skin = choice.key;
+                    JQT:ApplySkin();
+                    refresh();
+                end);
+
+                local desc = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal");
+                local path, _, flags = desc:GetFont();
+                if path then desc:SetFont(path, 11, flags) end
+                desc:SetTextColor(0.7, 0.7, 0.7);
+                desc:SetJustifyH("LEFT");
+                desc:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 2, -4);
+                desc:SetWidth(half);
+                desc:SetText(choice.text);
+
+                buttons[i] = button;
+            end
+
+            parent:SetScript("OnShow", refresh);
+            refresh();
+
+            return 46;
+        end
+    });
+end
+
+-- ---------------------------------------------------------------------------
 -- Options (Appearance > Skin)
 -- ---------------------------------------------------------------------------
 

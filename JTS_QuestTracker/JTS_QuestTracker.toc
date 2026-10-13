@@ -4,7 +4,7 @@
 ## Author: James
 ## Category: JTS Suite
 ## X-Suite: JTS Suite
-## Version: 3.0.0-alpha2
+## Version: 3.0.0-alpha3
 ## X-Based-On: Butter Quest Tracker by Butter Cookie Kitkat (MIT) - https://github.com/butter-cookie-kitkat/ButterQuestTracker
 ## X-License: MIT
 ## OptionalDeps: Ace3, Questie
@@ -37,6 +37,7 @@ Timers.lua
 Distance.lua
 Rewards.lua
 PartyProgress.lua
+Welcome.lua
 Skin.lua
 Highlights.lua
 Nameplates.lua
