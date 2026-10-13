@@ -113,6 +113,7 @@ CONSTANTS.DB_DEFAULTS = {
         TurnInXPSummary = true,
         StickyHeader = true,
         ScrollBarAlways = false,
+        ShowForeverMarker = true,
         CombatVisibility = "Show",
         CombatFadeAlpha = 0.35,
         HideInDungeons = false,

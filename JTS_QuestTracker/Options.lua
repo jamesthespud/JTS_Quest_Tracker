@@ -324,7 +324,7 @@ local function appearanceCategory()
             questPadding = O{ name = L('SETTINGS_QUEST_PADDING_NAME'), arg = "QuestPadding", type = "range",
                 min = 0, max = 20, step = 1, set = SetAndRefreshView },
             spacer6 = Spacer(),
-        }, Extra("distanceOptions", "rewardTooltipOptions")),
+        }, Extra("distanceOptions", "rewardTooltipOptions", "foreverMarkerOptions")),
 
         objectiveSettings = Group("Objectives", {
             fontSize = FontSize("ObjectiveFontSize"),

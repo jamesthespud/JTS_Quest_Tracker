@@ -47,6 +47,7 @@ grouped, how it looks and where it sits on screen.
 - **Distance without Questie.** Sort by Quest Proximity now uses WoW Forever's own quest helper (the same distance its quest arrow shows), with Questie only filling in quests the game has no location for. Optional **Show Distance** puts `120 yd` after each quest name (Appearance > Quest Names).
 - **Share quests with your group.** Right-click the tracker header for Share All Quests, or a zone header to share just that zone's quests (`/jtsqt share` too). They go out one every 3 seconds so your group can take each one.
 - **Welcome screen.** On first login a short tour lists the features you might not know about, each with a checkbox to turn it on or off. `/jtsqt welcome` (or Advanced > Welcome Screen) opens it again.
+- **New Forever quests marked.** Quests that are new in WoW Forever get a small blue infinity symbol in front of their name and a "New in WoW Forever" line in their tooltip (Appearance > Quest Names).
 - **Party progress.** Group members who also use JTS Quest Tracker see each other's progress on shared quests, right under their own (`Mike  5/8`) and in the quest tooltip. Only quest IDs and counts are shared, through hidden addon messages. Settings: Alerts > Your Group.
 - **Rewards in the tooltip.** Hover a quest to see its XP, money, items and the items you can choose from.
 - **Turn-in XP.** The header shows what you're carrying back to town, like `3 ready · 4,250 XP`, and stays pinned to the top while you scroll the list (Keep Header in View).
@@ -110,7 +111,7 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   (`/dump (select(4, GetBuildInfo()))` in game).
 - A quest, map or UI function is renamed or removed: fix it in `Compat/Compat.lua`. Every Blizzard quest, map and
   UI call goes through that file, wrapped so one missing function can't break the rest.
-- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`, `Rewards.lua`, `PartyProgress.lua`, `Welcome.lua`, `StickyHeader.lua`, `Skin.lua`, `Highlights.lua`, `Nameplates.lua`) so the core tracker stays as close to the original design as possible.
+- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`, `Rewards.lua`, `PartyProgress.lua`, `Welcome.lua`, `StickyHeader.lua`, `ForeverQuests.lua`, `Skin.lua`, `Highlights.lua`, `Nameplates.lua`) so the core tracker stays as close to the original design as possible.
 - All internal libraries are registered under `JTSQT*` names and all globals start with `JTS_QuestTracker`, so this
   addon can be installed next to Butter Quest Tracker without the two overwriting each other.
 
@@ -125,7 +126,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   quests (hidden addon messages, nothing in chat). Rewards (XP, money, items, choices) in the quest tooltip. Turn-in
   XP in the header (`3 ready · 4,250 XP`). Welcome screen on first login, with checkboxes for the features people
   might miss (`/jtsqt welcome`). Grow Upwards: the bottom edge stays put and the tracker grows up. Keep Header in View: the header
-  stays pinned to the top while you scroll. Always Show Scroll Bar. Announce to Party is now on by default, in the new Alerts > Your Group section.
+  stays pinned to the top while you scroll. Always Show Scroll Bar. Blue infinity
+  symbol on quests that are new in WoW Forever. Announce to Party is now on by default, in the new Alerts > Your Group section.
 - **1.2.5b** Dungeon Quests Only and Raid Quests Only (on by default): inside a dungeon or raid, only its kind of
   quests are listed. Fixed "ADDON_ACTION_BLOCKED ... Button:SetPassThroughButtons()" in combat with the world map
   open (focus and tracking changes now wait until combat ends and the map is closed).
