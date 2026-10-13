@@ -124,7 +124,7 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   Header Position Top / Bottom (Bottom by default with Grow Upwards). Keep Header in View: the header
   stays pinned to the top while you scroll. Always Show Scroll Bar. Blue infinity
   symbol on quests that are new in WoW Forever. Share all button on dungeon and raid headers in a group. The
-  welcome screen groups its features into Questing, Group and Tracker, with tips. Announce to Party is now on by default, in the new Alerts > Your Group section.
+  welcome screen walks through Questing, Group and Tracker one page at a time (Next / Back / Finish). Announce to Party is now on by default, in the new Alerts > Your Group section.
 - **1.2.5b** Dungeon Quests Only and Raid Quests Only (on by default): inside a dungeon or raid, only its kind of
   quests are listed. Fixed "ADDON_ACTION_BLOCKED ... Button:SetPassThroughButtons()" in combat with the world map
   open (focus and tracking changes now wait until combat ends and the map is closed).
