@@ -139,6 +139,9 @@ local function createButton(i)
 
     buttons[i] = button;
 
+    -- Masque skins (Integrations.lua), when Masque is installed.
+    if JQT.SkinQuestItemButton then pcall(JQT.SkinQuestItemButton, JQT, button) end
+
     return button;
 end
 

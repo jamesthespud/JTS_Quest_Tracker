@@ -46,9 +46,14 @@ grouped, how it looks and where it sits on screen.
 - **Quest timers.** Timed quests show `Time left: 4:32` under their name, counting down and turning red in the last minute.
 - **Distance without Questie.** Sort by Quest Proximity now uses WoW Forever's own quest helper (the same distance its quest arrow shows), with Questie only filling in quests the game has no location for. Optional **Show Distance** puts `120 yd` after each quest name (Appearance > Quest Names).
 - **Share quests with your group.** Right-click the tracker header for Share All Quests, or a zone header to share just that zone's quests (`/jtsqt share` too). They go out one every 3 seconds so your group can take each one. In a group, dungeon and raid headers (like Wailing Caverns) also get a **Share all** button.
-- **Welcome screen.** On first login a short tour lists the features you might not know about, each with a checkbox to turn it on or off. `/jtsqt welcome` (or Advanced > Welcome Screen) opens it again.
+- **Welcome screen.** On first login a short tour lists the features you might not know about, each with a checkbox to turn it on or off. After an update with new features you get a single **New in X.Y** page with just those. `/jtsqt welcome` (or Advanced > Welcome Screen) opens the full tour again.
 - **New Forever quests marked.** Quests that are new in WoW Forever get a small blue infinity symbol in front of their name and a "New in WoW Forever" line in their tooltip (Appearance > Quest Names).
-- **Party progress.** Group members who also use JTS Quest Tracker see each other's progress on shared quests, right under their own (`Mike  5/8`) and in the quest tooltip. Only quest IDs and counts are shared, through hidden addon messages. Settings: Alerts > Your Group.
+- **Party progress.** Group members who also use JTS Quest Tracker see each other's progress on shared quests: by default a small group icon and how many of them have it after the quest name, or a row per member under it (`Mike  5/8`), and always in the quest tooltip. Only quest IDs and counts are shared, through hidden addon messages. Settings: Alerts > Your Group (Show Party Progress As).
+- **Auto-accept and auto-turn-in.** Optional (both off by default): accept the quests NPCs offer and hand in finished ones. It stops when there's a reward to choose, skips grey quests unless you include them, and holding Shift lets you do it yourself. Filters & Sorting > Auto Quest.
+- **Drag to reorder.** Sorting > Manual (drag to reorder): drag a quest up or down to put it where you want it (a green line shows where it lands). The order is saved per character; new quests go to the end. Reset Manual Order starts over.
+- **Collapse in Instances.** Optional: entering a dungeon, raid, battleground, arena or scenario folds the tracker up to its header, and leaving opens it again. Frame Settings > Visibility.
+- **TomTom.** With TomTom installed, right-click a quest for **TomTom Waypoint** (it uses the same location as WoW's quest arrow), and optionally get a waypoint every time you focus a quest. Buttons > Other Addons.
+- **Masque.** With Masque installed, the quest item buttons can wear your Masque skin (Masque > JTS Quest Tracker > Quest Items).
 - **Rewards in the tooltip.** Hover a quest to see its XP, money, items and the items you can choose from.
 - **Turn-in XP.** The header shows what you're carrying back to town, like `3 ready · 4,250 XP`, and stays pinned to the top while you scroll the list (Keep Header in View).
 - **Easy to scan.** Finished objectives fade back, zone headers show how many quests they hold (`Elwynn Forest (3)`), and collapsed zones stay collapsed after a reload.
@@ -61,7 +66,7 @@ grouped, how it looks and where it sits on screen.
 - Collapsible zone headers
 - Filter quests to your current zone or subzone
 - Manually track or untrack quests
-- Sort by level, percent complete, recently updated, or quest proximity
+- Sort by level, percent complete, recently updated, quest proximity, or by hand (drag to reorder)
 - Color quest names by difficulty and optionally show their level
 - Adjust font size, colors, padding and the quest name format
 - Alt-click a quest for its Wowhead link, ctrl-click to link it in chat, shift-click to untrack it
@@ -117,6 +122,11 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **1.4.0** Party progress shows as a small group icon and a count by default (rows per member are still an
+  option). Auto-accept and auto-turn-in (off by default; Shift skips, stops for reward choices). Drag to reorder
+  quests by hand (Sorting > Manual). Collapse in Instances (off by default). TomTom waypoints from the quest menu
+  and optionally on focus. Masque skins for the quest item buttons. Returning players get a "New in 1.4.0" page
+  on the welcome screen instead of the whole tour.
 - **1.3.1** Fixed: you couldn't track more than 25 quests from the quest log. WoW's own tracking list stops at 25;
   JTS Quest Tracker now tracks the quest anyway (WoW still flashes its error once), so you can track all 40.
 - **1.3.0** Party progress: group members who also use JTS Quest Tracker see each other's progress on shared

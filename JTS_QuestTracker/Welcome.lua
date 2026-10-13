@@ -9,6 +9,11 @@ local _, ns = ...
     with a checkbox that turns it on or off right there.
 
     Other files can add rows or sections with JQT:AddWelcomeSection(section) (the V3 skin picker does).
+
+    What's new: features carry the version they arrived in (added = "1.4.0"). When someone who has
+    seen the welcome screen before loads a newer version with new features, they get a single
+    "New in X.Y" page with just those (and a button for the full tour) instead of the whole tour.
+    In the full tour, features new in this version are marked NEW.
 ]]
 
 local JQT = JTS_QuestTracker;
@@ -148,7 +153,102 @@ local FEATURES = {
             if JQT.UpdateMinimapButton then JQT:UpdateMinimapButton() end
         end
     },
+
+    -- 1.4.0
+    {
+        title = "Auto-accept Quests", group = "Questing", added = "1.4.0",
+        text = "Accepts the quests NPCs offer you. Hold Shift to do it yourself. Grey quests are skipped.",
+        get = function() return p().AutoAcceptQuests end,
+        set = function(v) p().AutoAcceptQuests = v end
+    },
+    {
+        title = "Auto-turn-in Quests", group = "Questing", added = "1.4.0",
+        text = "Hands in finished quests. Stops so you can pick when there's a choice of rewards.",
+        get = function() return p().AutoTurnInQuests end,
+        set = function(v) p().AutoTurnInQuests = v end
+    },
+    {
+        title = "TomTom Waypoint When Focusing", group = "Questing", added = "1.4.0",
+        text = "Needs TomTom. Focusing a quest also sets a TomTom arrow; right-click quests for one any time.",
+        get = function() return p().TomTomOnFocus end,
+        set = function(v) p().TomTomOnFocus = v end
+    },
+    {
+        title = "Party Progress as a Count", group = "Group", added = "1.4.0",
+        text = "A small group icon and a number by each quest instead of a row per member. Hover for details.",
+        get = function() return p().PartyProgressDisplay ~= "Rows" end,
+        set = function(v) p().PartyProgressDisplay = v and "Count" or "Rows"; refresh() end
+    },
+    {
+        title = "Collapse in Instances", group = "Group", added = "1.4.0",
+        text = "Dungeons, raids, battlegrounds: the tracker folds up to its header, and opens again when you leave.",
+        get = function() return p().AutoCollapseInInstance end,
+        set = function(v) p().AutoCollapseInInstance = v end
+    },
+    {
+        title = "Drag to Reorder", group = "Tracker", added = "1.4.0",
+        text = "Sorts quests by hand: drag one up or down to move it (the tracker must be unlocked).",
+        get = function() return p().Sorting == "ByManual" end,
+        set = function(v)
+            if v then
+                if p().Sorting ~= "ByManual" then p().SortingBeforeManual = p().Sorting end
+                p().Sorting = "ByManual";
+            elseif p().Sorting == "ByManual" then
+                p().Sorting = p().SortingBeforeManual or "Disabled";
+            end
+            pcall(JQT.UpdateQuestProximityTimer, JQT);
+            JQT:Sort();
+        end
+    },
 };
+
+-- Extra lines for the "New in" page, per version (things without an on/off switch).
+local NEW_NOTES = {
+    ["1.4.0"] = "|cffffd100Also new:|r Masque can skin the quest item buttons (Masque > JTS Quest Tracker > Quest Items)  ·  right-click a quest for a TomTom waypoint",
+};
+
+-- "1.3.10" -> { 1, 3, 10 }; nil when it isn't a version number.
+local function parseVersion(version)
+    if type(version) ~= "string" or not version:match("^%d") then return nil end
+
+    local parts = {};
+    for n in version:gmatch("%d+") do parts[#parts + 1] = tonumber(n) end
+
+    return parts;
+end
+
+-- true when a is a newer version than b.
+local function newer(a, b)
+    local va, vb = parseVersion(a), parseVersion(b);
+    if not va or not vb then return false end
+
+    for i = 1, math.max(#va, #vb) do
+        local x, y = va[i] or 0, vb[i] or 0;
+        if x ~= y then return x > y end
+    end
+
+    return false;
+end
+
+-- The features added after the version the player last saw (and up to this one).
+local function newSince(seen)
+    local list = {};
+
+    for _, feature in ipairs(FEATURES) do
+        if feature.added and newer(feature.added, seen) and not newer(feature.added, ns.CONSTANTS.VERSION) then
+            list[#list + 1] = feature;
+        end
+    end
+
+    return list;
+end
+
+function JQT:GetNewWelcomeFeatures(seen)
+    local titles = {};
+    for _, feature in ipairs(newSince(seen or self.db.global.WelcomeSeen)) do titles[#titles + 1] = feature.title end
+
+    return titles;
+end
 
 -- The order of the sections.
 local GROUPS = { "Questing", "Group", "Tracker" };
@@ -192,7 +292,8 @@ local function featureRow(parent, feature, x, y, width)
     local title = text(parent, 13, HIGHLIGHT_FONT_COLOR or { r = 1, g = 1, b = 1 });
     title:SetPoint("TOPLEFT", check, "TOPRIGHT", 4, -4);
     title:SetWidth(width - 32);
-    title:SetText(feature.title);
+    local isNew = feature.added and feature.added == ns.CONSTANTS.VERSION and not parent.isNewPage;
+    title:SetText(feature.title .. (isNew and "  |cff33ff99NEW|r" or ""));
 
     local desc = text(parent, 11, { r = 0.7, g = 0.7, b = 0.7 });
     desc:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -2);
@@ -263,7 +364,9 @@ local function build()
     version:SetText("Version " .. tostring(ns.CONSTANTS.VERSION) .. "  ·  a quick tour of what you can turn on or off. You can change all of it later in the settings.");
 
     -- Pages: extra sections first (the V3 skin picker), then one per feature section.
-    local pages = {};
+    -- `tour` is the full walk-through; `pages` is what is showing (the tour, or the "New in" page).
+    local tour = {};
+    local pages = tour;
     local top, pageWidth = -86, WIDTH - 48;
 
     local function newPage(title)
@@ -277,7 +380,7 @@ local function build()
         page.title:SetText(title);
         page.name = title;
 
-        pages[#pages + 1] = page;
+        tour[#tour + 1] = page;
 
         return page;
     end
@@ -318,7 +421,7 @@ local function build()
     end
 
     -- Tips on the last page.
-    local last = pages[#pages];
+    local last = tour[#tour];
     if last then
         local tips = text(last, 11, { r = 0.75, g = 0.75, b = 0.75 });
         tips:SetPoint("BOTTOMLEFT", 0, 4);
@@ -354,12 +457,16 @@ local function build()
     credit:SetText("James's own fork of Butter Quest Tracker by Butter Cookie Kitkat (MIT). Not affiliated with the original author.  ·  /jtsqt welcome shows this again");
 
     local current = 1;
+    local newPage; -- the "New in" page, rebuilt for whatever is new since the last visit
 
     local function showPage(index)
         current = math.max(1, math.min(#pages, index));
 
+        for _, page in ipairs(tour) do page:Hide() end
+        if newPage then newPage:Hide() end
+
         for i, page in ipairs(pages) do
-            if i == current then page:Show() else page:Hide() end
+            if i == current then page:Show() end
         end
 
         local names = {};
@@ -379,6 +486,70 @@ local function build()
 
     frame.ShowPage = function(_, index) showPage(index) end;
     frame.GetPage = function() return current, #pages end;
+
+    -- The "New in" page: just the features added since `seen`, with a way into the full tour.
+    frame.ShowNew = function(_, seen)
+        local features = newSince(seen);
+        if #features == 0 then return false end
+
+        if newPage then newPage:Hide() end
+
+        newPage = CreateFrame("Frame", nil, frame);
+        newPage:SetPoint("TOPLEFT", 24, top);
+        newPage:SetPoint("BOTTOMRIGHT", -24, 64);
+        newPage.isNewPage = true;
+        newPage.name = "New in " .. tostring(ns.CONSTANTS.VERSION);
+
+        local title = text(newPage, 16, GREEN);
+        title:SetPoint("TOPLEFT", 0, 0);
+        title:SetText(newPage.name);
+
+        local intro = text(newPage, 12, { r = 0.7, g = 0.7, b = 0.7 });
+        intro:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -4);
+        intro:SetWidth(pageWidth - 140);
+        intro:SetText("New since you last looked" .. (parseVersion(seen) and (" (" .. seen .. ")") or "") .. ". Tick what you'd like on, untick what you don't.");
+
+        local tourButton = CreateFrame("Button", nil, newPage, "UIPanelButtonTemplate");
+        tourButton:SetSize(120, 22);
+        tourButton:SetPoint("TOPRIGHT", 0, 2);
+        tourButton:SetText("Full Tour");
+        tourButton:SetScript("OnClick", function()
+            pages = tour;
+            showPage(1);
+        end);
+        newPage.tourButton = tourButton;
+
+        local versions = {};
+        for i, feature in ipairs(features) do
+            local column = (i - 1) % columns;
+            local row = math.floor((i - 1) / columns);
+            featureRow(newPage, feature, column * (columnWidth + 28), -50 - row * rowHeight, columnWidth);
+            versions[feature.added] = true;
+        end
+
+        local notes = {};
+        for version in pairs(versions) do
+            if NEW_NOTES[version] then notes[#notes + 1] = NEW_NOTES[version] end
+        end
+        table.sort(notes);
+
+        if #notes > 0 then
+            local extra = text(newPage, 11, { r = 0.75, g = 0.75, b = 0.75 });
+            extra:SetPoint("BOTTOMLEFT", 0, 4);
+            extra:SetWidth(pageWidth);
+            extra:SetText(table.concat(notes, "\n"));
+        end
+
+        for _, entry in ipairs(checkboxes) do
+            local ok, value = pcall(entry.feature.get);
+            entry.check:SetChecked(ok and value and true or false);
+        end
+
+        pages = { newPage };
+        showPage(1);
+
+        return true;
+    end;
 
     -- Tall enough for the biggest page, smaller on small screens.
     local tallest = 0;
@@ -402,7 +573,11 @@ local function build()
             entry.check:SetChecked(ok and value and true or false);
         end
 
-        showPage(1);
+        if not frame.keepPage then
+            pages = tour;
+            showPage(1);
+        end
+        frame.keepPage = nil;
     end);
 
     frame:SetScript("OnHide", function()
@@ -414,27 +589,49 @@ local function build()
     return frame;
 end
 
-function JQT:ShowWelcome()
+-- onlyNewSince: a version; shows just the "New in" page for features added after it.
+function JQT:ShowWelcome(onlyNewSince)
     local ok, window = pcall(build);
     if not ok or not window then
         self:LogError("Welcome screen:", window);
         return;
     end
 
+    if window:IsShown() then window.keepPage = nil end
+
+    if onlyNewSince then
+        local shown, hasNew = pcall(window.ShowNew, window, onlyNewSince);
+        if shown and hasNew then
+            window.keepPage = not window:IsShown();
+        elseif not shown then
+            self:LogError("Welcome screen:", hasNew);
+        end
+    end
+
     window:Show();
 end
 
--- First login with this version: show it once things have settled (and never in combat).
+-- First login: the full tour. A returning player on a version with new features: just those.
+-- Shown once things have settled (and never in combat).
 hooksecurefunc(JQT, "Initialize", function(self)
-    if self.db.global.WelcomeSeen then return end
+    local seen = self.db.global.WelcomeSeen;
+    local onlyNew;
+
+    if seen then
+        if #newSince(seen) == 0 then
+            if newer(ns.CONSTANTS.VERSION, seen) then self.db.global.WelcomeSeen = ns.CONSTANTS.VERSION end
+            return;
+        end
+        onlyNew = seen;
+    end
 
     C_Timer.After(4, function()
         if InCombatLockdown and InCombatLockdown() then
             local wait = CreateFrame("Frame");
             wait:RegisterEvent("PLAYER_REGEN_ENABLED");
-            wait:SetScript("OnEvent", function(w) w:UnregisterAllEvents(); JQT:ShowWelcome() end);
+            wait:SetScript("OnEvent", function(w) w:UnregisterAllEvents(); JQT:ShowWelcome(onlyNew) end);
         else
-            JQT:ShowWelcome();
+            JQT:ShowWelcome(onlyNew);
         end
     end);
 end);
