@@ -659,7 +659,7 @@ function JQT:AddTrackerHeader(trackerContainer, visibleCount, questCount)
         size = p.TrackerHeaderFontSize,
         container = self.tracker:Container({
             container = trackerContainer,
-            margin = { bottom = 10 },
+            margin = p.HeaderPosition == "Bottom" and { top = 10 } or { bottom = 10 },
             events = {
                 OnMouseDown = function(button)
                     if button == "LeftButton" and not self:IsTrackerLocked() then
@@ -838,7 +838,10 @@ function JQT:RefreshView()
         backgroundColor = p.DeveloperMode and { r = 1.0, g = 1.0, a = 0.2 }
     });
 
-    if p.TrackerHeaderEnabled then
+    -- Header Position: above the list (Top) or below it (Bottom, for trackers that grow upwards).
+    local headerAtBottom = p.HeaderPosition == "Bottom";
+
+    if p.TrackerHeaderEnabled and not headerAtBottom then
         self:AddTrackerHeader(trackerContainer, count(watchedQuests), questCount);
     end
 
@@ -862,6 +865,10 @@ function JQT:RefreshView()
         end
 
         self:AddQuest(quest, parent);
+    end
+
+    if p.TrackerHeaderEnabled and headerAtBottom then
+        self:AddTrackerHeader(trackerContainer, count(watchedQuests), questCount);
     end
 
     self:Sort();

@@ -429,8 +429,17 @@ local function windowCategory()
                     if JQT.tracker then
                         local p = JQT.db.profile;
                         p.PositionX, p.PositionY = JQT.tracker:SetGrowUp(value);
+
+                        -- The header goes where the tracker stays still (you can change it back).
+                        p.HeaderPosition = value and "Bottom" or "Top";
+                        JQT:RefreshView();
                     end
                 end },
+            headerPosition = O{ name = "Header Position",
+                desc = "|cffffffffTop|r: the header sits above the list.\n|cffffffffBottom|r: the header sits below the list. With Grow Upwards that is the edge that stays still, so the header never moves on screen.\n\nTurning Grow Upwards on or off sets this for you; you can still change it.",
+                arg = "HeaderPosition", type = "select", width = 0.9,
+                values = { Top = "Top", Bottom = "Bottom" }, sorting = { "Top", "Bottom" },
+                set = SetAndRefreshView, disabled = Off("TrackerHeaderEnabled") },
             spacer0 = Spacer(),
             positionX = Position("PositionX", "x", math.ceil(GetScreenWidth())),
             positionY = Position("PositionY", "y", math.ceil(GetScreenHeight())),

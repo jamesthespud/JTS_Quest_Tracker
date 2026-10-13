@@ -36,7 +36,7 @@ grouped, how it looks and where it sits on screen.
 - **Import / export.** Turn your profile into one line of text to share or back up, and paste someone else's to load it (into your current profile or a new one).
 - **Quest focus.** Point WoW's built-in quest helper (the on-screen arrow with distance, the map waypoint and the highlighted objective area) at any quest: middle-click it, or use Focus in its right-click menu. The focused quest is marked in the tracker, and optional Auto-focus follows the quest you just progressed or accepted. Settings: Filters & Sorting > Quest Focus.
 - **Helpful tooltips.** Hover a quest to see its level (in its difficulty color), its type, its summary and every objective with its count, plus what each click does.
-- **Grow Upwards.** Keep the tracker near the bottom of the screen: its bottom edge stays put and it grows up as you pick up quests (Frame Settings > Position & Size).
+- **Grow Upwards.** Keep the tracker near the bottom of the screen: its bottom edge stays put and it grows up as you pick up quests, with the header below the list where it never moves (Header Position: Top / Bottom). Frame Settings > Position & Size.
 - **Lock in Combat.** The tracker can't be dragged while you fight (on by default; Frame Settings > Position & Size).
 - **Hide in combat or instances.** Fade the tracker or hide it while you fight, and hide it in dungeons, raids, or battlegrounds and arenas. Showing it by hand keeps it up until the fight ends or you leave. Settings: Frame Settings > Visibility.
 - **Dungeon Quests Only / Raid Quests Only.** Inside a dungeon the tracker lists only dungeon quests (the Dungeon or Heroic tag, or quests filed under the dungeon in your quest log); inside a raid, only raid quests (the Raid tag, or filed under the raid). Pinned quests still show. Both on by default; Filters & Sorting > Filters.
@@ -120,7 +120,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 - **1.3.0** Party progress: group members who also use JTS Quest Tracker see each other's progress on shared
   quests (hidden addon messages, nothing in chat). Rewards (XP, money, items, choices) in the quest tooltip. Turn-in
   XP in the header (`3 ready · 4,250 XP`). Welcome screen on first login, with checkboxes for the features people
-  might miss (`/jtsqt welcome`). Grow Upwards: the bottom edge stays put and the tracker grows up. Keep Header in View: the header
+  might miss (`/jtsqt welcome`). Grow Upwards: the bottom edge stays put and the tracker grows up, with
+  Header Position Top / Bottom (Bottom by default with Grow Upwards). Keep Header in View: the header
   stays pinned to the top while you scroll. Always Show Scroll Bar. Blue infinity
   symbol on quests that are new in WoW Forever. Announce to Party is now on by default, in the new Alerts > Your Group section.
 - **1.2.5b** Dungeon Quests Only and Raid Quests Only (on by default): inside a dungeon or raid, only its kind of

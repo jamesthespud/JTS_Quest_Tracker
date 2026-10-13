@@ -81,6 +81,7 @@ CONSTANTS.DB_DEFAULTS = {
         LockFrame = false,
         LockInCombat = true,
         GrowUp = false,
+        HeaderPosition = "Top",
         ShowFocusMarker = true,
         AutoFocusQuest = false,
         ShowScrollBar = true,
