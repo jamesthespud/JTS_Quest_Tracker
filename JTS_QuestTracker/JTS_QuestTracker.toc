@@ -37,3 +37,4 @@ Timers.lua
 Distance.lua
 Rewards.lua
 PartyProgress.lua
+Welcome.lua

@@ -482,6 +482,8 @@ end
 
 local function advancedCategory()
     return Category(L('SETTINGS_ADVANCED_TAB'), 2000, {
+        welcomeGroup = JQT.welcomeOptions and Group("Welcome Screen", {}, Extra("welcomeOptions")) or nil,
+
         localeGroup = Group(L('SETTINGS_LOCALE_HEADER'), {
             locale = O{ name = L('SETTINGS_LOCALE_NAME'), type = "select", style = "dropdown",
                 values = { enUS = "English", ruRU = "русский", zhCN = "简体中文" },
@@ -623,6 +625,8 @@ SlashCmdList['JTS_QUESTTRACKER'] = function(command)
         JQT:SetTrackerHidden(false);
     elseif command == "hide" then
         JQT:SetTrackerHidden(true);
+    elseif command == "welcome" or command == "help" then
+        JQT:ShowWelcome();
     elseif command == "collapse" then
         JQT:CollapseAll();
     elseif command == "expand" then
@@ -635,6 +639,6 @@ SlashCmdList['JTS_QUESTTRACKER'] = function(command)
         JQT:UpdateMinimapButton();
         say(icon.hide and "Minimap button hidden." or "Minimap button shown.");
     else
-        say("Usage: /jtsqt [options | toggle | show | hide | collapse | expand | share | minimap | reset | status]");
+        say("Usage: /jtsqt [options | welcome | toggle | show | hide | collapse | expand | share | minimap | reset | status]");
     end
 end
