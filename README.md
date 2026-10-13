@@ -117,6 +117,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **1.3.1** Fixed: you couldn't track more than 25 quests from the quest log. WoW's own tracking list stops at 25;
+  JTS Quest Tracker now tracks the quest anyway (WoW still flashes its error once), so you can track all 40.
 - **1.3.0** Party progress: group members who also use JTS Quest Tracker see each other's progress on shared
   quests (hidden addon messages, nothing in chat). Rewards (XP, money, items, choices) in the quest tooltip. Turn-in
   XP in the header (`3 ready · 4,250 XP`). Welcome screen on first login, with checkboxes for the features people
