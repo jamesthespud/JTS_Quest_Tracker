@@ -53,6 +53,8 @@ grouped, how it looks and where it sits on screen.
 - **Drag to reorder.** Sorting > Manual (drag to reorder): drag a quest up or down to put it where you want it (a green line shows where it lands). The order is saved per character; new quests go to the end. Reset Manual Order starts over.
 - **Collapse in Instances.** Optional: entering a dungeon, raid, battleground, arena or scenario folds the tracker up to its header, and leaving opens it again. Frame Settings > Visibility.
 - **TomTom.** With TomTom installed, right-click a quest for **TomTom Waypoint** (it uses the same location as WoW's quest arrow), and optionally get a waypoint every time you focus a quest. Buttons > Other Addons.
+- **Quest notes.** Right-click a quest > Add Note to leave yourself a reminder ("need a group", "drops from the ogres"). It shows in the quest's tooltip, a small note icon marks the quest (Show Note Icon, Appearance > Quest Names), and it's cleared when you turn the quest in. Saved per character.
+- **Clean Up Quest Log.** Right-click the tracker header (or `/jtsqt cleanup`) to abandon all your grey and failed quests in one go. It lists them and asks first; pinned quests and grey quests that are ready to turn in are kept.
 - **Masque.** With Masque installed, the quest item buttons can wear your Masque skin (Masque > JTS Quest Tracker > Quest Items).
 - **Rewards in the tooltip.** Hover a quest to see its XP, money, items and the items you can choose from.
 - **Turn-in XP.** The header shows what you're carrying back to town, like `3 ready · 4,250 XP`, and stays pinned to the top while you scroll the list (Keep Header in View).
@@ -91,6 +93,7 @@ All libraries (Ace3) are bundled, nothing else needs installing.
 | `/jtsqt toggle` | Show or hide the tracker (also `show`, `hide`, or the key binding) |
 | `/jtsqt collapse` / `/jtsqt expand` | Collapse or expand every zone |
 | `/jtsqt share` | Share all your quests with your group |
+| `/jtsqt cleanup` | Abandon your grey and failed quests (lists them and asks first) |
 | `/jtsqt minimap` | Show or hide the minimap button |
 | `/jtsqt status` | Print which game APIs were found (include this in bug reports) |
 | `/jtsqt reset` | Clear your manual track and untrack choices |
@@ -122,6 +125,9 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **1.5.0** Quest notes: right-click a quest > Add Note; shown in the tooltip with a note icon on the quest, cleared on
+  turn-in. Clean Up Quest Log: abandon grey and failed quests in one go from the tracker header menu or
+  `/jtsqt cleanup` (asks first, keeps pinned quests and grey quests that are ready to turn in).
 - **1.4.0** Party progress shows as a small group icon and a count by default (rows per member are still an
   option). Auto-accept and auto-turn-in (off by default; Shift skips, stops for reward choices). Drag to reorder
   quests by hand (Sorting > Manual). Collapse in Instances (off by default). TomTom waypoints from the quest menu

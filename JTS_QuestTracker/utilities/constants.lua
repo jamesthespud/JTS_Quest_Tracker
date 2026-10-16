@@ -122,6 +122,7 @@ CONSTANTS.DB_DEFAULTS = {
         StickyHeader = true,
         ScrollBarAlways = false,
         ShowForeverMarker = true,
+        ShowQuestNoteIcon = true,
         CombatVisibility = "Show",
         CombatFadeAlpha = 0.35,
         HideInDungeons = false,
@@ -155,7 +156,8 @@ CONSTANTS.DB_DEFAULTS = {
         QUESTS_LAST_UPDATED = {},
         PINNED_QUESTS = {},
         CollapsedSections = {},  -- "QUESTS" (whole tracker) and "Z-<zone>" -> true when collapsed
-        TrackerHidden = false
+        TrackerHidden = false,
+        QuestNotes = {}  -- questID -> your note (QuestNotes.lua)
     }
 };
 
