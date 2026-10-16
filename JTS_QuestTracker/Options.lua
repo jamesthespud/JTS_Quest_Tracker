@@ -353,7 +353,7 @@ local function appearanceCategory()
             questPadding = O{ name = L('SETTINGS_QUEST_PADDING_NAME'), arg = "QuestPadding", type = "range",
                 min = 0, max = 20, step = 1, set = SetAndRefreshView },
             spacer6 = Spacer(),
-        }, Extra("distanceOptions", "rewardTooltipOptions", "foreverMarkerOptions")),
+        }, Extra("distanceOptions", "rewardTooltipOptions", "foreverMarkerOptions", "questNoteOptions")),
 
         objectiveSettings = Group("Objectives", {
             fontSize = FontSize("ObjectiveFontSize"),
@@ -683,12 +683,14 @@ SlashCmdList['JTS_QUESTTRACKER'] = function(command)
         JQT:ExpandAll();
     elseif command == "share" then
         JQT:ShareQuests();
+    elseif command == "cleanup" then
+        JQT:CleanUpQuestLog();
     elseif command == "minimap" then
         local icon = JQT.db.profile.MinimapIcon;
         icon.hide = not icon.hide;
         JQT:UpdateMinimapButton();
         say(icon.hide and "Minimap button hidden." or "Minimap button shown.");
     else
-        say("Usage: /jtsqt [options | welcome | toggle | show | hide | collapse | expand | share | minimap | reset | status]");
+        say("Usage: /jtsqt [options | welcome | toggle | show | hide | collapse | expand | share | cleanup | minimap | reset | status]");
     end
 end

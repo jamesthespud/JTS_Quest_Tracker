@@ -349,6 +349,13 @@ function JQT:ShowTrackerMenu()
         enable(root:CreateButton("Share All Quests", function() JQT:ShareQuests() end),
             inGroup() and not JQT:IsSharingQuests());
 
+        -- Grey and failed quests (LogCleanup.lua), with how many there are.
+        if JQT.GetCleanupQuests then
+            local n = #JQT:GetCleanupQuests();
+            enable(root:CreateButton("Clean Up Quest Log" .. (n > 0 and (" (" .. n .. ")") or ""), function() JQT:CleanUpQuestLog() end),
+                n > 0 and not JQT:IsCleaningUpQuestLog());
+        end
+
         root:CreateDivider();
         root:CreateButton("Hide Tracker", function() JQT:ToggleTrackerVisibility() end);
         root:CreateButton(SETTINGS or "Settings", function() JQT:ToggleOptions() end);

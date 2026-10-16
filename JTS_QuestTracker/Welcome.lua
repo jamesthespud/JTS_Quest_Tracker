@@ -205,10 +205,19 @@ local FEATURES = {
             JQT:Sort();
         end
     },
+
+    -- 1.5.0
+    {
+        title = "Quest Notes", group = "Questing", added = "1.5.0",
+        text = "Right-click a quest > Add Note. It shows in the tooltip; the tick shows a note icon after the name.",
+        get = function() return p().ShowQuestNoteIcon ~= false end,
+        set = function(v) p().ShowQuestNoteIcon = v; refresh() end
+    },
 };
 
 -- Extra lines for the "New in" page, per version (things without an on/off switch).
 local NEW_NOTES = {
+    ["1.5.0"] = "|cffffd100Also new:|r right-click the tracker header > Clean Up Quest Log abandons your grey and failed quests in one go (it lists them first)  ·  /jtsqt cleanup",
     ["1.4.0"] = "|cffffd100Also new:|r Masque can skin the quest item buttons (Masque > JTS Quest Tracker > Quest Items)  ·  right-click a quest for a TomTom waypoint",
 };
 
