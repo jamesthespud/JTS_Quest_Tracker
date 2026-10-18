@@ -129,7 +129,7 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
-- **2.0.0** (in beta) Modern skin (Appearance > Skin; the default for new installs): dark rounded panel, level badges,
+- **2.0.0** Modern skin (Appearance > Skin; the default for new installs): dark rounded panel, level badges,
   quest type labels, counts on the right, rounded progress bars, check marks and a "Ready to turn in" pill.
   XP bar under the header, with the XP from quests ready to turn in drawn on top (gold, and "Level up!", when they
   would level you). Quest item hotkey: one key uses the focused or closest quest's item.
