@@ -165,6 +165,14 @@ local function findHeaderFont(trackerContainer)
     if font and font.type == "font" then return font, header end
 end
 
+-- The pinned header copy (StickyHeader.lua) gets the same bar, so it stays in view with the header.
+function JQT:ApplyXPBar(font)
+    if not font then return end
+
+    pcall(setBar, font);
+    font:SetHeight(font:_textHeight());
+end
+
 local addTrackerHeader = JQT.AddTrackerHeader;
 
 function JQT:AddTrackerHeader(trackerContainer, ...)
@@ -264,6 +272,7 @@ events:SetScript("OnEvent", function(_, event)
 
     -- Otherwise just move the bar.
     if headerFont and headerFont.isXPBar then pcall(apply, headerFont) end
+    if JQT.RefreshStickyHeader then JQT:RefreshStickyHeader() end
 end);
 
 -- ---------------------------------------------------------------------------

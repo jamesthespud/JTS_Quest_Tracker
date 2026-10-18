@@ -60,6 +60,11 @@ local function build(tracker)
     sticky:SetScript("OnMouseUp", function(_, button)
         if header and header.OnMouseUp then header:OnMouseUp(button) end
     end);
+    -- Hovering shows what hovering the real header shows (the XP tooltip).
+    sticky:SetScript("OnEnter", function(self)
+        if JQT.ShowXPTooltip then JQT:ShowXPTooltip(self) end
+    end);
+    sticky:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end);
 
     return sticky;
 end
@@ -79,6 +84,9 @@ local function fill()
     text:SetSize(p.TrackerHeaderFontSize);
     text:SetColor(p.TrackerHeaderFontColor);
     text:SetHoverColor(p.TrackerHeaderFontColor);
+
+    -- The XP bar under the header (XPBar.lua) comes along too.
+    if JQT.ApplyXPBar then JQT:ApplyXPBar(text) end
 
     sticky.bg:SetColorTexture(backgroundColor());
     sticky:SetHeight((text:GetRealHeight() or 12) + 12);
@@ -131,6 +139,12 @@ function JQT:UpdateStickyHeader()
     elseif sticky then
         sticky:Hide();
     end
+end
+
+-- Something in the header changed without a redraw (the XP bar moved): fill the copy again.
+function JQT:RefreshStickyHeader()
+    if sticky then sticky.dirty = true end
+    self:UpdateStickyHeader();
 end
 
 -- The real header: remember it and its counts every time it's drawn.
