@@ -55,7 +55,13 @@ StaticPopupDialogs[NAME .. "_WowheadURL"] = {
 -- ---------------------------------------------------------------------------
 
 function JQT:OnEnable()
+    -- A brand new install (no saved settings at all) starts on the Modern skin; upgrades keep theirs.
+    -- (WoW leaves the saved variable nil until the addon has saved once.)
+    local fresh = JTS_QuestTrackerDB == nil;
+
     self.db = LibStub("AceDB-3.0"):New("JTS_QuestTrackerDB", ns.CONSTANTS.DB_DEFAULTS, true);
+    if fresh then self.db.profile.Skin = "Modern" end
+
     -- Profiles, migration of older settings, import / export (Profiles.lua).
     if self.SetupProfiles then
         self:SetupProfiles();

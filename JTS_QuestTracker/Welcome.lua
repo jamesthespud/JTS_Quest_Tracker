@@ -8,7 +8,7 @@ local _, ns = ...
     about, one section per page (Questing, Group, Tracker; Next / Back, Finish on the last page), each
     with a checkbox that turns it on or off right there.
 
-    Other files can add rows or sections with JQT:AddWelcomeSection(section) (the V3 skin picker does).
+    Other files can add rows or sections with JQT:AddWelcomeSection(section) (the skin picker does).
 
     What's new: features carry the version they arrived in (added = "1.4.0"). When someone who has
     seen the welcome screen before loads a newer version with new features, they get a single
@@ -213,10 +213,44 @@ local FEATURES = {
         get = function() return p().ShowQuestNoteIcon ~= false end,
         set = function(v) p().ShowQuestNoteIcon = v; refresh() end
     },
+
+    -- 2.0.0
+    {
+        -- The full tour has its own Look page, so this one is only on the "New in" page.
+        title = "Modern Skin", group = "Tracker", added = "2.0.0", newOnly = true,
+        text = "A dark rounded panel, level badges and counts on the right. Untick for the classic look.",
+        get = function() return p().Skin == "Modern" end,
+        set = function(v) p().Skin = v and "Modern" or "Classic"; if JQT.ApplySkin then JQT:ApplySkin() end end
+    },
+    {
+        title = "XP Bar", group = "Tracker", added = "2.0.0",
+        text = "A thin bar under the header, with what your finished quests will add. Gold when they level you up.",
+        get = function() return p().ShowXPBar ~= false end,
+        set = function(v) p().ShowXPBar = v; refresh() end
+    },
+    {
+        title = "Highlight Quest Objects", group = "World", added = "2.0.0",
+        text = "Marks and outlines the nearest thing you can use, which in quest areas is mostly quest objects.",
+        get = function() return JQT.IsHighlightingQuestObjects and JQT:IsHighlightingQuestObjects() end,
+        set = function(v) if JQT.SetHighlightQuestObjects then JQT:SetHighlightQuestObjects(v) end end
+    },
+    {
+        title = "Quest Item Glow", group = "World", added = "2.0.0",
+        text = "A quest item button glows and sparkles when your target is in range for it.",
+        get = function() return p().QuestItemGlow ~= false end,
+        set = function(v) p().QuestItemGlow = v end
+    },
+    {
+        title = "Quest Icons on Nameplates", group = "World", added = "2.0.0",
+        text = "A gold ! by the nameplate of enemies you still need for a quest (nameplates on, V key).",
+        get = function() return p().NameplateQuestIcons ~= false end,
+        set = function(v) p().NameplateQuestIcons = v; if JQT.UpdateNameplateQuestIcons then JQT:UpdateNameplateQuestIcons() end end
+    },
 };
 
 -- Extra lines for the "New in" page, per version (things without an on/off switch).
 local NEW_NOTES = {
+    ["2.0.0"] = "|cffffd100Also new:|r bind a key to |cffffffffUse Quest Item|r (Key Bindings > AddOns > JTS Quest Tracker): it uses the focused or closest quest's item  ·  Safe to try: everything here can be turned off again",
     ["1.5.0"] = "|cffffd100Also new:|r right-click the tracker header > Clean Up Quest Log abandons your grey and failed quests in one go (it lists them first)  ·  /jtsqt cleanup",
     ["1.4.0"] = "|cffffd100Also new:|r Masque can skin the quest item buttons (Masque > JTS Quest Tracker > Quest Items)  ·  right-click a quest for a TomTom waypoint",
 };
@@ -265,7 +299,7 @@ function JQT:GetNewWelcomeFeatures(seen)
 end
 
 -- The order of the sections.
-local GROUPS = { "Questing", "Group", "Tracker" };
+local GROUPS = { "Questing", "World", "Group", "Tracker" };
 
 -- Extra sections from other files: { title = ..., build = function(parent, width) return height end }
 local sections = {};
@@ -306,7 +340,8 @@ local function featureRow(parent, feature, x, y, width)
     local title = text(parent, 13, HIGHLIGHT_FONT_COLOR or { r = 1, g = 1, b = 1 });
     title:SetPoint("TOPLEFT", check, "TOPRIGHT", 4, -4);
     title:SetWidth(width - 32);
-    local isNew = feature.added and feature.added == ns.CONSTANTS.VERSION and not parent.isNewPage;
+    local base = tostring(ns.CONSTANTS.VERSION or ""):match("^[%d%.]+");
+    local isNew = feature.added and feature.added == base and not parent.isNewPage;
     title:SetText(feature.title .. (isNew and "  |cff33ff99NEW|r" or ""));
 
     local desc = text(parent, 11, { r = 0.7, g = 0.7, b = 0.7 });
@@ -322,6 +357,7 @@ local INTROS = {
     Questing = "Help with finding, tracking and finishing quests.",
     Group = "For questing with friends and in dungeons.",
     Tracker = "How the tracker looks and where it sits.",
+    World = "Help spotting what your quests need, out in the world.",
 };
 
 local TIPS = "|cffffd100Tips:|r middle-click a quest to point WoW's quest arrow at it  ·  right-click quests and headers for menus  ·  Color Blind Mode (all 9 types) is in the settings";
@@ -377,7 +413,7 @@ local function build()
     version:SetPoint("TOPLEFT", heading, "BOTTOMLEFT", 0, -3);
     version:SetText("Version " .. tostring(ns.CONSTANTS.VERSION) .. "  ·  a quick tour of what you can turn on or off. You can change all of it later in the settings.");
 
-    -- Pages: extra sections first (the V3 skin picker), then one per feature section.
+    -- Pages: extra sections first (the skin picker), then one per feature section.
     -- `tour` is the full walk-through; `pages` is what is showing (the tour, or the "New in" page).
     local tour = {};
     local pages = tour;
@@ -416,7 +452,7 @@ local function build()
     for _, group in ipairs(GROUPS) do
         local members = {};
         for _, feature in ipairs(FEATURES) do
-            if feature.group == group then members[#members + 1] = feature end
+            if feature.group == group and not feature.newOnly then members[#members + 1] = feature end
         end
 
         if #members > 0 then
@@ -520,7 +556,17 @@ local function build()
         newPage:SetPoint("TOPLEFT", 24, top);
         newPage:SetPoint("BOTTOMRIGHT", -24, FOOTER);
         newPage.isNewPage = true;
-        newPage.name = "New in " .. tostring(ns.CONSTANTS.VERSION);
+        newPage.name = "New in " .. (tostring(ns.CONSTANTS.VERSION):match("^[%d%.]+") or tostring(ns.CONSTANTS.VERSION));
+
+        -- Tall enough for everything new (a long list when someone skipped several versions).
+        local needed = 86 + 50 + math.ceil(#features / columns) * rowHeight + 40 + 30 + FOOTER;
+        if needed > frame:GetHeight() then
+            frame:SetHeight(needed);
+            local screenHeight = UIParent and UIParent:GetHeight();
+            if type(screenHeight) == "number" and screenHeight > 0 and needed > screenHeight * 0.92 then
+                frame:SetScale(screenHeight * 0.92 / needed);
+            end
+        end
 
         local title = text(newPage, 16, GREEN);
         title:SetPoint("TOPLEFT", 0, 0);
@@ -577,7 +623,7 @@ local function build()
     local tallest = 0;
     for _, group in ipairs(GROUPS) do
         local n = 0;
-        for _, feature in ipairs(FEATURES) do if feature.group == group then n = n + 1 end end
+        for _, feature in ipairs(FEATURES) do if feature.group == group and not feature.newOnly then n = n + 1 end end
         tallest = math.max(tallest, math.ceil(n / columns));
     end
 

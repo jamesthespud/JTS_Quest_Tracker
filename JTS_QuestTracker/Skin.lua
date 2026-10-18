@@ -1,7 +1,7 @@
 local _, ns = ...
 
 --[[
-    Skins (V3 alpha).
+    Skins (2.0).
 
       Classic: the tracker as it has always looked.
       Modern:  a dark rounded panel, an accent bar and count pill on the header, small caps zone
@@ -702,7 +702,7 @@ JQT.skinOptions = function()
     return {
         skin = {
             name = "Skin", order = 1, width = 1.0,
-            desc = "|cffffffffClassic|r: the tracker as it has always looked.\n|cffffffffModern|r: a dark rounded panel, level badges, quest type labels, counts on the right and rounded progress bars.\n\n|cffff8000V3 alpha:|r Modern is new, please report anything that looks off.",
+            desc = "|cffffffffClassic|r: the tracker as it has always looked.\n|cffffffffModern|r: a dark rounded panel, level badges, quest type labels, counts on the right and rounded progress bars.\n\nNew installs start on Modern; you can switch any time.",
             type = "select", arg = "Skin", values = { Classic = "Classic", Modern = "Modern" }, sorting = { "Classic", "Modern" },
             set = set
         },

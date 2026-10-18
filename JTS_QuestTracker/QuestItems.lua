@@ -50,7 +50,7 @@ local function updateCooldown(button)
 end
 
 -- ---------------------------------------------------------------------------
--- Glow and sparkles when you can use the item on your target (V3 alpha)
+-- Glow and sparkles when you can use the item on your target (2.0)
 -- ---------------------------------------------------------------------------
 
 local TEX = "Interface\\AddOns\\JTS_QuestTracker\\Textures\\";
@@ -246,6 +246,11 @@ end
 -- ---------------------------------------------------------------------------
 -- Which quests have items
 -- ---------------------------------------------------------------------------
+
+-- The quest item buttons (for the hotkey label in QuestItemKey.lua).
+function JQT:GetQuestItemButtons()
+    return buttons;
+end
 
 function JQT:RefreshQuestItemData()
     wipe(items);
@@ -493,7 +498,7 @@ JQT.buttonsTabGroups.questItems = function()
             },
 
             glow = {
-                name = "Glow When Usable (V3 alpha)",
+                name = "Glow When Usable",
                 desc = "The button glows and sparkles when your target is in range for the item (and it isn't on cooldown), so you know it's time to use it.",
                 type = "toggle",
                 width = 1.6,

@@ -2,4 +2,5 @@
     <Binding name="JTS_QUESTTRACKER_TOGGLE" header="JTS_QUESTTRACKER">
         JTS_QuestTracker_Toggle()
     </Binding>
+    <Binding name="CLICK JTS_QuestTrackerItemKey:LeftButton"/>
 </Bindings>

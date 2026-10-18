@@ -1,7 +1,7 @@
 local _, ns = ...
 
 --[[
-    Highlight Quest Objects (V3 alpha).
+    Highlight Quest Objects (2.0).
 
     Modern WoW makes quest objects sparkle. Addons can't draw on things in the 3D world, but WoW
     Forever has the modern Interact Key system, which can mark and outline the nearest thing you
@@ -121,7 +121,7 @@ end);
 
 JQT.highlightOptions = function()
     return {
-        name = "Quest Objects (V3 alpha)",
+        name = "Quest Objects",
         type = "group",
         inline = true,
 

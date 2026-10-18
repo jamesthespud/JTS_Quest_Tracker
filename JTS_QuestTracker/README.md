@@ -54,6 +54,10 @@ grouped, how it looks and where it sits on screen.
 - **Collapse in Instances.** Optional: entering a dungeon, raid, battleground, arena or scenario folds the tracker up to its header, and leaving opens it again. Frame Settings > Visibility.
 - **TomTom.** With TomTom installed, right-click a quest for **TomTom Waypoint** (it uses the same location as WoW's quest arrow), and optionally get a waypoint every time you focus a quest. Buttons > Other Addons.
 - **Quest notes.** Right-click a quest > Add Note to leave yourself a reminder ("need a group", "drops from the ogres"). It shows in the quest's tooltip, a small note icon marks the quest (Show Note Icon, Appearance > Quest Names), and it's cleared when you turn the quest in. Saved per character.
+- **Modern skin.** A dark rounded panel with level badges, quest type labels, counts on the right and rounded progress bars (Appearance > Skin). New installs start on Modern; Classic is the original look.
+- **XP bar.** A thin bar under the header shows how far you are through your level, with the XP from quests that are ready to turn in drawn on top. It turns gold and the header says **Level up!** when handing them in would level you. Hover the header for the numbers and your rested XP.
+- **Quest item hotkey.** Bind a key to **Use Quest Item** (Key Bindings > AddOns > JTS Quest Tracker): it uses the item of your focused quest, or the closest quest that has one, and that item's button shows the key. Settings: Buttons > Quest Item Key.
+- **Help out in the world.** Highlight Quest Objects marks and outlines the nearest thing you can use (WoW's own Interact Key icons), quest item buttons glow when your target is in range, and enemies you still need for a quest get a gold **!** by their nameplate.
 - **Clean Up Quest Log.** Right-click the tracker header (or `/jtsqt cleanup`) to abandon all your grey and failed quests in one go. It lists them and asks first; pinned quests and grey quests that are ready to turn in are kept.
 - **Masque.** With Masque installed, the quest item buttons can wear your Masque skin (Masque > JTS Quest Tracker > Quest Items).
 - **Rewards in the tooltip.** Hover a quest to see its XP, money, items and the items you can choose from.
@@ -119,17 +123,20 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   (`/dump (select(4, GetBuildInfo()))` in game).
 - A quest, map or UI function is renamed or removed: fix it in `Compat/Compat.lua`. Every Blizzard quest, map and
   UI call goes through that file, wrapped so one missing function can't break the rest.
-- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`, `Rewards.lua`, `PartyProgress.lua`, `Welcome.lua`, `StickyHeader.lua`, `ForeverQuests.lua`, `Skin.lua`, `Highlights.lua`, `Nameplates.lua`) so the core tracker stays as close to the original design as possible.
+- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`, `Rewards.lua`, `PartyProgress.lua`, `Welcome.lua`, `StickyHeader.lua`, `ForeverQuests.lua`, `Skin.lua`, `Highlights.lua`, `Nameplates.lua`, `XPBar.lua`, `QuestItemKey.lua`) so the core tracker stays as close to the original design as possible.
 - All internal libraries are registered under `JTSQT*` names and all globals start with `JTS_QuestTracker`, so this
   addon can be installed next to Butter Quest Tracker without the two overwriting each other.
 
 ## Version history
 
-- **3.0.0 alpha** (test builds, not a release; include everything in 1.5.0) Modern skin (Appearance > Skin): dark rounded panel, level badges,
+- **2.0.0** (in beta) Modern skin (Appearance > Skin; the default for new installs): dark rounded panel, level badges,
   quest type labels, counts on the right, rounded progress bars, check marks and a "Ready to turn in" pill.
+  XP bar under the header, with the XP from quests ready to turn in drawn on top (gold, and "Level up!", when they
+  would level you). Quest item hotkey: one key uses the focused or closest quest's item.
   Highlight Quest Objects (Alerts > Quest Objects): turns on WoW's Interact Key icons and outlines to mark nearby
   quest objects, and puts your own settings back when turned off. Quest item buttons glow and sparkle when your
-  target is in range. Quest icons on the nameplates of enemies you still need.
+  target is in range. Quest icons on the nameplates of enemies you still need. (The 2.0 test builds were called
+  3.0.0-alpha1 to alpha14.)
 - **1.5.0** Quest notes: right-click a quest > Add Note; shown in the tooltip with a note icon on the quest, cleared on
   turn-in. Clean Up Quest Log: abandon grey and failed quests in one go from the tracker header menu or
   `/jtsqt cleanup` (asks first, keeps pinned quests and grey quests that are ready to turn in).

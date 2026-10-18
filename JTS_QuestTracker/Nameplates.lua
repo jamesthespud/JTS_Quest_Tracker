@@ -1,7 +1,7 @@
 local _, ns = ...
 
 --[[
-    Quest icons on nameplates (V3 alpha).
+    Quest icons on nameplates (2.0).
 
     A small "!" next to the nameplate of every enemy that is part of one of your quests (the ones
     you still need to kill or loot), using the game's own C_QuestLog.UnitIsRelatedToActiveQuest.
