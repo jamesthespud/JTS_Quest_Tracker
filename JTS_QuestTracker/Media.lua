@@ -8,11 +8,12 @@ local _, ns = ...
     Sounds: a set of the game's own UI sounds (only the ones this client actually has),
             plus LibSharedMedia sounds, for "objective complete" and "quest complete".
 
-    Saved values look like "game:Friz Quadrata", "lsm:Expressway", "kit:READY_CHECK" or "None".
+    Saved values look like "game:Friz Quadrata", "jts:Oswald", "lsm:Expressway", "kit:READY_CHECK" or "None".
 
-    The default font is "auto:Expressway": Expressway when another addon shares it through
-    LibSharedMedia (ElvUI and most media packs do), otherwise the game's own font. Expressway's
-    licence doesn't allow shipping the font file with the addon, so it is never bundled.
+    Bundled fonts (Fonts\, free licences in Fonts\Licenses): shown after the game's fonts, and
+    shared with other addons through LibSharedMedia when it is loaded. Fonts without Cyrillic
+    letters are left out on Russian clients, and all of them on Chinese and Korean clients
+    (none of them has those letters).
 ]]
 
 local JQT = JTS_QuestTracker;
@@ -34,33 +35,68 @@ local GAME_FONTS = {
     { name = "2002 Bold",     path = "Fonts\\2002B.TTF" }
 };
 
-local PREFERRED = "Expressway";
+local FONT_DIR = "Interface\\AddOns\\JTS_QuestTracker\\Fonts\\";
 
-local function fetchShared(name)
+-- name, file, has Cyrillic letters
+local BUNDLED_FONTS = {
+    { name = "Barlow Semi Condensed", file = "BarlowSemiCondensed-Medium.ttf" },
+    { name = "Fira Sans Condensed",   file = "FiraSansCondensed-Medium.ttf", cyrillic = true },
+    { name = "PT Sans Narrow",        file = "PT_Sans-Narrow-Web-Bold.ttf", cyrillic = true },
+    { name = "Ubuntu Condensed",      file = "UbuntuCondensed-Regular.ttf", cyrillic = true },
+    { name = "Oswald",                file = "Oswald-Regular.ttf", cyrillic = true },
+    { name = "Titillium Web",         file = "TitilliumWeb-SemiBold.ttf" },
+    { name = "Rajdhani",              file = "Rajdhani-SemiBold.ttf" },
+    { name = "Alegreya Sans SC",      file = "AlegreyaSansSC-Medium.ttf", cyrillic = true },
+    { name = "Cinzel",                file = "Cinzel-Bold.ttf" },
+};
+
+-- The bundled fonts this client can show.
+local function bundledFonts()
+    local locale = GetLocale and GetLocale() or "enUS";
+    if locale == "zhCN" or locale == "zhTW" or locale == "koKR" then return {} end
+
+    local list = {};
+    for _, font in ipairs(BUNDLED_FONTS) do
+        if locale ~= "ruRU" or font.cyrillic then list[#list + 1] = font end
+    end
+
+    return list;
+end
+
+-- Share them with other addons (and SharedMedia font pickers).
+local shared = false;
+
+local function shareBundledFonts()
     local lsm = LSM();
-    if not lsm then return nil end
+    if shared or not lsm then return end
+    shared = true;
 
-    local ok, path = pcall(lsm.Fetch, lsm, "font", name, true);
-
-    return ok and path or nil;
+    local mask = lsm.LOCALE_BIT_western;
+    for _, font in ipairs(bundledFonts()) do
+        local fontMask = font.cyrillic and lsm.LOCALE_BIT_ruRU and mask and (mask + lsm.LOCALE_BIT_ruRU) or mask;
+        pcall(lsm.Register, lsm, "font", font.name, FONT_DIR .. font.file, fontMask);
+    end
 end
 
-function JQT:HasExpressway()
-    return fetchShared(PREFERRED) ~= nil;
-end
+pcall(shareBundledFonts);
+hooksecurefunc(JQT, "Initialize", function() pcall(shareBundledFonts) end);
 
 -- Returns values, sorting for an options dropdown.
 function JQT:GetFontChoices()
-    local values, sorting = { Default = "Game Default" }, { "auto:" .. PREFERRED, "Default" };
-
-    values["auto:" .. PREFERRED] = PREFERRED .. (self:HasExpressway()
-        and " |cff888888(recommended)|r"
-        or " |cff888888(not installed: using the game font)|r");
+    local values, sorting = { Default = "Game Default" }, { "Default" };
 
     for _, font in ipairs(GAME_FONTS) do
         local key = "game:" .. font.name;
         values[key] = font.name;
         sorting[#sorting + 1] = key;
+    end
+
+    local ours = {};
+    for _, font in ipairs(bundledFonts()) do
+        local key = "jts:" .. font.name;
+        values[key] = font.name;
+        sorting[#sorting + 1] = key;
+        ours[font.name] = true;
     end
 
     local lsm = LSM();
@@ -77,7 +113,7 @@ function JQT:GetFontChoices()
                     if font.name == name then duplicate = true end
                 end
 
-                if not duplicate and not values[key] and name ~= PREFERRED then
+                if not duplicate and not values[key] and not ours[name] then
                     values[key] = name .. " |cff888888(SharedMedia)|r";
                     sorting[#sorting + 1] = key;
                 end
@@ -103,42 +139,25 @@ function JQT:GetFontPath()
 
     local source, name = choice:match("^(%a+):(.+)$");
 
-    if source == "auto" then
-        return fetchShared(name);
-    elseif source == "game" then
+    if source == "game" then
         for _, font in ipairs(GAME_FONTS) do
             if font.name == name then return font.path end
         end
+    elseif source == "jts" then
+        for _, font in ipairs(bundledFonts()) do
+            if font.name == name then return FONT_DIR .. font.file end
+        end
     elseif source == "lsm" then
-        return fetchShared(name);
+        local lsm = LSM();
+
+        if lsm then
+            local ok, path = pcall(lsm.Fetch, lsm, "font", name, true);
+            if ok and path then return path end
+        end
     end
 
     return nil;
 end
-
--- Fonts can be shared after the tracker has drawn (another addon loading later): when the one
--- we're waiting for turns up, use it.
-local listener = {};
-
-local function watchSharedFonts()
-    local lsm = LSM();
-    if not lsm or listener.watching or type(lsm.RegisterCallback) ~= "function" then return end
-    listener.watching = true;
-
-    lsm.RegisterCallback(listener, "LibSharedMedia_Registered", function(_, mediaType, name)
-        if mediaType ~= "font" or not JQT.db then return end
-
-        local choice = JQT.db.profile.FontFace;
-        local wanted = choice and choice:match("^%a+:(.+)$");
-
-        if wanted == name and JQT.ApplyTextStyle then
-            JQT:ApplyTextStyle();
-            if JQT.tracker then JQT:RefreshView() end
-        end
-    end);
-end
-
-hooksecurefunc(JQT, "Initialize", function() pcall(watchSharedFonts) end);
 
 -- ---------------------------------------------------------------------------
 -- Sounds

@@ -29,7 +29,7 @@ grouped, how it looks and where it sits on screen.
 - **Color Blind Mode.** Covers every type of color vision deficiency: protanopia, protanomaly, deuteranopia, deuteranomaly, tritanopia, tritanomaly, achromatopsia, blue cone monochromacy and achromatomaly. It swaps the difficulty, progress, progress bar, turn-in, failed and flash colors for palettes checked with a color vision simulation. Optional **Difficulty Markers** (`!!` `!` `-` `--`) show difficulty without relying on color, and switch on by themselves in the no-color modes. Settings: Color Blind Mode.
 - **Quest item buttons.** Quests that give you an item to use get a button beside them: click to use, Shift-click to link it. Shows charges, cooldown and a range dot. Settings: Buttons.
 - **Quest tags.** `[E]` Elite, `[G3]` Group of 3, `[D]` Dungeon, `[R]` Raid, `[PvP]`, `[H]` Heroic, `[L]` Legendary after the quest name, or the full words. Settings: Appearance > Quest Names.
-- **Font picker.** Choose the game's fonts or any SharedMedia font. Settings: Appearance > Text.
+- **Font picker.** Choose the game's fonts, nine fonts that come with the tracker, or any SharedMedia font. Settings: Appearance > Text.
 - **Alert sounds.** Pick separate sounds for "objective complete" and "quest complete" (game sounds or SharedMedia sounds), with a Play button to preview.
 - **Minimap button.** Left-click for settings, right-click to show/hide the tracker, drag to move. Works with minimap button bags and Titan Panel/ElvUI data bars when LibDBIcon is present. `/jtsqt minimap` shows or hides it.
 - **Profiles.** Every setting lives in a profile. All characters share "Default" until you choose otherwise; on the Profiles page you can switch, copy, create, reset or delete profiles, so a layout made on one character loads on any other.
@@ -129,8 +129,9 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
-- **2.0.3** Expressway is the default font when you have it (ElvUI and most SharedMedia packs share it); without it
-  the tracker uses the game font. Modern skin: easier-to-read numbers. Level badges are bigger and no longer outlined (the outline smudged
+- **2.0.3** Nine more fonts come with the tracker (Barlow Semi Condensed, Fira Sans Condensed, PT Sans Narrow,
+  Ubuntu Condensed, Oswald, Titillium Web, Rajdhani, Alegreya Sans SC, Cinzel), also shared with other addons
+  through SharedMedia. Modern skin: easier-to-read numbers. Level badges are bigger and no longer outlined (the outline smudged
   dark numbers on light badges), and the distance after quest names is a lighter grey.
 - **2.0.2** Welcome screen: the page names are now tabs across the top (they were squeezed between the buttons);
   click one to jump to that page.
@@ -197,6 +198,9 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   removed to keep the code small. Earlier version numbers were test builds.
 
 ## Credits and license
+
+The bundled fonts in `Fonts/` are free fonts used under their own licences (SIL Open Font License, and the Ubuntu Font Licence for Ubuntu Condensed); each licence is in `Fonts/Licenses/`. Oswald and Cinzel are shipped as single-weight versions made from their variable fonts.
+
 
 - Original addon: **Butter Quest Tracker** by Butter Cookie Kitkat, (c) 2019, MIT license.
 - JTS Quest Tracker fork and changes: (c) 2026 James, released under the same MIT license. See [`LICENSE`](LICENSE),
