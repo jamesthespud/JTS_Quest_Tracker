@@ -281,7 +281,7 @@ local function appearanceCategory()
 
         textStyleSettings = Group("Text", {
             fontFace = O{ name = "Font",
-                desc = "The font used for all tracker text. Fonts from SharedMedia (or any addon that shares fonts with it) show up here too.",
+                desc = "The font used for all tracker text. Fonts from SharedMedia (or any addon that shares fonts with it) show up here too.\n\n|cffffffffExpressway|r (the default) is used when another addon provides it, like ElvUI or a SharedMedia pack; without one the tracker uses the game's font.",
                 arg = "FontFace", type = "select", width = 2.4, values = fontValues, sorting = fontOrder,
                 set = function(info, value) SetInDB(info, value); JQT:ApplyTextStyle(); JQT:RefreshView(); end },
             spacer1 = Spacer(),

@@ -129,7 +129,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
-- **2.0.3** Modern skin: easier-to-read numbers. Level badges are bigger and no longer outlined (the outline smudged
+- **2.0.3** Expressway is the default font when you have it (ElvUI and most SharedMedia packs share it); without it
+  the tracker uses the game font. Modern skin: easier-to-read numbers. Level badges are bigger and no longer outlined (the outline smudged
   dark numbers on light badges), and the distance after quest names is a lighter grey.
 - **2.0.2** Welcome screen: the page names are now tabs across the top (they were squeezed between the buttons);
   click one to jump to that page.

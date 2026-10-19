@@ -9,6 +9,10 @@ local _, ns = ...
             plus LibSharedMedia sounds, for "objective complete" and "quest complete".
 
     Saved values look like "game:Friz Quadrata", "lsm:Expressway", "kit:READY_CHECK" or "None".
+
+    The default font is "auto:Expressway": Expressway when another addon shares it through
+    LibSharedMedia (ElvUI and most media packs do), otherwise the game's own font. Expressway's
+    licence doesn't allow shipping the font file with the addon, so it is never bundled.
 ]]
 
 local JQT = JTS_QuestTracker;
@@ -30,9 +34,28 @@ local GAME_FONTS = {
     { name = "2002 Bold",     path = "Fonts\\2002B.TTF" }
 };
 
+local PREFERRED = "Expressway";
+
+local function fetchShared(name)
+    local lsm = LSM();
+    if not lsm then return nil end
+
+    local ok, path = pcall(lsm.Fetch, lsm, "font", name, true);
+
+    return ok and path or nil;
+end
+
+function JQT:HasExpressway()
+    return fetchShared(PREFERRED) ~= nil;
+end
+
 -- Returns values, sorting for an options dropdown.
 function JQT:GetFontChoices()
-    local values, sorting = { Default = "Game Default" }, { "Default" };
+    local values, sorting = { Default = "Game Default" }, { "auto:" .. PREFERRED, "Default" };
+
+    values["auto:" .. PREFERRED] = PREFERRED .. (self:HasExpressway()
+        and " |cff888888(recommended)|r"
+        or " |cff888888(not installed: using the game font)|r");
 
     for _, font in ipairs(GAME_FONTS) do
         local key = "game:" .. font.name;
@@ -54,7 +77,7 @@ function JQT:GetFontChoices()
                     if font.name == name then duplicate = true end
                 end
 
-                if not duplicate and not values[key] then
+                if not duplicate and not values[key] and name ~= PREFERRED then
                     values[key] = name .. " |cff888888(SharedMedia)|r";
                     sorting[#sorting + 1] = key;
                 end
@@ -80,21 +103,42 @@ function JQT:GetFontPath()
 
     local source, name = choice:match("^(%a+):(.+)$");
 
-    if source == "game" then
+    if source == "auto" then
+        return fetchShared(name);
+    elseif source == "game" then
         for _, font in ipairs(GAME_FONTS) do
             if font.name == name then return font.path end
         end
     elseif source == "lsm" then
-        local lsm = LSM();
-
-        if lsm then
-            local ok, path = pcall(lsm.Fetch, lsm, "font", name, true);
-            if ok and path then return path end
-        end
+        return fetchShared(name);
     end
 
     return nil;
 end
+
+-- Fonts can be shared after the tracker has drawn (another addon loading later): when the one
+-- we're waiting for turns up, use it.
+local listener = {};
+
+local function watchSharedFonts()
+    local lsm = LSM();
+    if not lsm or listener.watching or type(lsm.RegisterCallback) ~= "function" then return end
+    listener.watching = true;
+
+    lsm.RegisterCallback(listener, "LibSharedMedia_Registered", function(_, mediaType, name)
+        if mediaType ~= "font" or not JQT.db then return end
+
+        local choice = JQT.db.profile.FontFace;
+        local wanted = choice and choice:match("^%a+:(.+)$");
+
+        if wanted == name and JQT.ApplyTextStyle then
+            JQT:ApplyTextStyle();
+            if JQT.tracker then JQT:RefreshView() end
+        end
+    end);
+end
+
+hooksecurefunc(JQT, "Initialize", function() pcall(watchSharedFonts) end);
 
 -- ---------------------------------------------------------------------------
 -- Sounds
