@@ -119,18 +119,30 @@ end
 function Font:ModernBadge(text, bg)
     local d = regions(self);
     local path, size, flags = fontInfo(self);
-    local fg = luminance(bg) > 0.55 and { r = 0.06, g = 0.08, b = 0.06 } or { r = 1, g = 1, b = 1 };
+    -- Dark text on light badges (yellow, green, the grey of easy quests), white on dark ones.
+    local fg = luminance(bg) > 0.45 and { r = 0.06, g = 0.08, b = 0.06 } or { r = 1, g = 1, b = 1 };
 
-    d.badgeText:SetFont(path, math.max(8, size - 2), flags);
+    -- No outline on the badge: an outline around dark text on a light badge smudges the number.
+    -- Nearly the size of the quest name, so the level reads at a glance.
+    d.badgeText:SetFont(path, math.max(9, size - 1), "");
     d.badgeText:SetText(text);
     d.badgeText:SetTextColor(fg.r, fg.g, fg.b);
+    if d.badgeText.SetShadowOffset then
+        if fg.r > 0.5 then
+            -- White on a dark badge: a soft shadow lifts it.
+            d.badgeText:SetShadowColor(0, 0, 0, 0.6);
+            d.badgeText:SetShadowOffset(1, -1);
+        else
+            d.badgeText:SetShadowOffset(0, 0);
+        end
+    end
 
-    local width = math.max(16, math.ceil(d.badgeText:GetStringWidth()) + 8);
-    local height = math.ceil(size) + 2;
+    local width = math.max(18, math.ceil(d.badgeText:GetStringWidth()) + 10);
+    local height = math.ceil(size) + 4;
 
     d.badgeBg:SetVertexColor(bg.r, bg.g, bg.b, 1);
     d.badgeBg:ClearAllPoints();
-    d.badgeBg:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 1);
+    d.badgeBg:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 2);
     d.badgeBg:SetSize(width, height);
     d.badgeText:ClearAllPoints();
     d.badgeText:SetPoint("CENTER", d.badgeBg, "CENTER", 0, 0);
@@ -361,7 +373,13 @@ function JQT:GetModernQuestTitle(quest)
     local ok, title = pcall(self.GetQuestHeader, self, quest);
     p.QuestLevelDisplay, p.QuestTagStyle = level, tags;
 
-    return ok and title or quest.title or "";
+    if not ok then return quest.title or "" end
+
+    -- The distance ("120 yd", Distance.lua) is a dim grey made for the Classic look; on the dark
+    -- Modern panel it gets the same light grey as the objective counts.
+    if type(title) == "string" then title = title:gsub("|cff9d9d9d", "|cffc4c9ce") end
+
+    return title;
 end
 
 -- What the quest name row should say (Distance.lua keeps it up to date with this).
