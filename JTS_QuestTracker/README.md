@@ -129,6 +129,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **2.0.2** Welcome screen: the page names are now tabs across the top (they were squeezed between the buttons);
+  click one to jump to that page.
 - **2.0.1** Fixed: the XP bar now stays pinned with the header when you scroll down (Keep Header in View). The quest
   item hotkey can be set right in the settings (Buttons > Quest Item Key > Key).
 - **2.0.0** Modern skin (Appearance > Skin; the default for new installs): dark rounded panel, level badges,

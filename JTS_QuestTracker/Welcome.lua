@@ -417,7 +417,9 @@ local function build()
     -- `tour` is the full walk-through; `pages` is what is showing (the tour, or the "New in" page).
     local tour = {};
     local pages = tour;
-    local top, pageWidth = -86, WIDTH - 48;
+    -- A row of tabs (one per page) sits under the heading; the pages start below it.
+    local TABS_Y, TAB_HEIGHT = -80, 22;
+    local top, pageWidth = TABS_Y - TAB_HEIGHT - 12, WIDTH - 48;
 
     local function newPage(title)
         local page = CreateFrame("Frame", nil, frame);
@@ -498,8 +500,14 @@ local function build()
     backButton:SetPoint("RIGHT", nextButton, "LEFT", -8, 0);
     backButton:SetText("Back");
 
-    local steps = text(frame, 12, { r = 0.55, g = 0.55, b = 0.55 }, "CENTER");
-    steps:SetPoint("BOTTOM", 0, BUTTONS_Y + 6);
+    -- Tabs: every page by name across the full width, the current one in green and underlined.
+    local tabs = {};
+
+    local tabLine = frame:CreateTexture(nil, "ARTWORK");
+    tabLine:SetPoint("TOPLEFT", 24, TABS_Y - TAB_HEIGHT);
+    tabLine:SetPoint("TOPRIGHT", -24, TABS_Y - TAB_HEIGHT);
+    tabLine:SetHeight(1);
+    tabLine:SetColorTexture(1, 1, 1, 0.08);
 
     local credit = text(frame, 10, { r = 0.45, g = 0.45, b = 0.45 }, "CENTER");
     -- The credit has its own strip under the buttons, with a thin line between them.
@@ -527,11 +535,51 @@ local function build()
             if i == current then page:Show() end
         end
 
-        local names = {};
-        for i, page in ipairs(pages) do
-            names[i] = i == current and ("|cff33ff99" .. page.name .. "|r") or page.name;
+        -- One page (the "New in" page) needs no tabs; it has its own title.
+        local showTabs = #pages > 1;
+        local tabWidth = pageWidth / math.max(1, #pages);
+
+        for i = 1, math.max(#pages, #tabs) do
+            local tab = tabs[i];
+
+            if not tab and i <= #pages then
+                tab = CreateFrame("Button", nil, frame);
+                tab.label = text(tab, 13, { r = 0.6, g = 0.6, b = 0.6 }, "CENTER");
+                tab.label:SetPoint("LEFT", 2, 0);
+                tab.label:SetPoint("RIGHT", -2, 0);
+                tab.underline = tab:CreateTexture(nil, "OVERLAY");
+                tab.underline:SetPoint("BOTTOMLEFT", 8, 0);
+                tab.underline:SetPoint("BOTTOMRIGHT", -8, 0);
+                tab.underline:SetHeight(2);
+                tab.underline:SetColorTexture(GREEN.r, GREEN.g, GREEN.b, 1);
+                tab:SetScript("OnEnter", function(self) if not self.selected then self.label:SetTextColor(1, 1, 1) end end);
+                tab:SetScript("OnLeave", function(self) if not self.selected then self.label:SetTextColor(0.6, 0.6, 0.6) end end);
+                tabs[i] = tab;
+            end
+
+            if tab then
+                if showTabs and i <= #pages then
+                    local index = i;
+                    tab:ClearAllPoints();
+                    tab:SetPoint("TOPLEFT", frame, "TOPLEFT", 24 + (i - 1) * tabWidth, TABS_Y);
+                    tab:SetSize(tabWidth, TAB_HEIGHT);
+                    tab:SetScript("OnClick", function() showPage(index) end);
+                    tab.label:SetText(pages[i].name);
+                    tab.selected = i == current;
+                    if tab.selected then
+                        tab.label:SetTextColor(GREEN.r, GREEN.g, GREEN.b);
+                        tab.underline:Show();
+                    else
+                        tab.label:SetTextColor(0.6, 0.6, 0.6);
+                        tab.underline:Hide();
+                    end
+                    tab:Show();
+                else
+                    tab:Hide();
+                end
+            end
         end
-        steps:SetText(table.concat(names, "   ·   "));
+        if showTabs then tabLine:Show() else tabLine:Hide() end
 
         if current > 1 then backButton:Show() else backButton:Hide() end
         nextButton:SetText(current < #pages and "Next" or "Finish");
@@ -559,7 +607,7 @@ local function build()
         newPage.name = "New in " .. (tostring(ns.CONSTANTS.VERSION):match("^[%d%.]+") or tostring(ns.CONSTANTS.VERSION));
 
         -- Tall enough for everything new (a long list when someone skipped several versions).
-        local needed = 86 + 50 + math.ceil(#features / columns) * rowHeight + 40 + 30 + FOOTER;
+        local needed = -top + 50 + math.ceil(#features / columns) * rowHeight + 40 + 30 + FOOTER;
         if needed > frame:GetHeight() then
             frame:SetHeight(needed);
             local screenHeight = UIParent and UIParent:GetHeight();
@@ -627,7 +675,7 @@ local function build()
         tallest = math.max(tallest, math.ceil(n / columns));
     end
 
-    local height = 86 + 50 + tallest * rowHeight + 40 + FOOTER;
+    local height = -top + 50 + tallest * rowHeight + 40 + FOOTER;
     frame:SetHeight(math.max(HEIGHT, height));
 
     local screenHeight = UIParent and UIParent:GetHeight();
