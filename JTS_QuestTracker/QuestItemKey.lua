@@ -214,6 +214,43 @@ end);
 
 JQT.buttonsTabGroups = JQT.buttonsTabGroups or {};
 
+-- Sets (or with "" clears) the key, like Blizzard's Keybindings page does, and saves it.
+function JQT:SetQuestItemKey(key)
+    if InCombatLockdown() then
+        say("Key bindings can't be changed in combat. Try again when the fight is over.");
+        return false;
+    end
+
+    -- One key at a time: the new one replaces whatever this action had.
+    for _, old in ipairs({ GetBindingKey(BINDING) }) do
+        SetBinding(old, nil);
+    end
+
+    if type(key) == "string" and key ~= "" then
+        local previous = GetBindingAction(key);
+
+        if not SetBinding(key, BINDING) then
+            say("Couldn't bind " .. key .. ".");
+            return false;
+        end
+
+        if previous and previous ~= "" and previous ~= BINDING then
+            local name = _G["BINDING_NAME_" .. previous] or previous;
+            say(key .. " was the key for |cffffffff" .. tostring(name) .. "|r; it now uses your quest item instead.");
+        end
+    end
+
+    if SaveBindings and GetCurrentBindingSet then SaveBindings(GetCurrentBindingSet()) end
+
+    self:UpdateQuestItemKeyLabel();
+
+    return true;
+end
+
+function JQT:GetQuestItemKey()
+    return (GetBindingKey(BINDING));
+end
+
 JQT.buttonsTabGroups.itemKey = function()
     local function set(info, value)
         JQT.db.profile[info.arg] = value;
@@ -229,9 +266,7 @@ JQT.buttonsTabGroups.itemKey = function()
         args = {
             status = {
                 name = function()
-                    local key = GetBindingKey and GetBindingKey(BINDING);
-                    local line = key and ("Key: |cffffffff" .. key .. "|r")
-                        or "Key: |cff999999not set|r. Set it in |cffffffffEsc > Options > Keybindings > AddOns > JTS Quest Tracker > Use Quest Item|r.";
+                    local line = "One key that uses the item of your focused quest, or else the closest quest that has one.";
 
                     local choice = JQT:GetQuestItemKeyChoice();
                     if choice then
@@ -241,6 +276,13 @@ JQT.buttonsTabGroups.itemKey = function()
                     return line;
                 end,
                 type = "description", fontSize = "medium", order = 1
+            },
+            key = {
+                name = "Key", order = 1.5, width = 1.0,
+                desc = "Click it, then press the key you want (Shift, Ctrl and Alt combinations work). Click it and press Escape to clear the key.\n\nThis is the same binding as |cffffffffKeybindings > AddOns > JTS Quest Tracker > Use Quest Item|r. If the key was used for something else, that action loses it.",
+                type = "keybinding",
+                get = function() return JQT:GetQuestItemKey() or "" end,
+                set = function(_, value) JQT:SetQuestItemKey(value) end
             },
             focusFirst = {
                 name = "Focused Quest First", order = 2, width = 1.4,

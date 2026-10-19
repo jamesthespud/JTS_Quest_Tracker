@@ -56,7 +56,7 @@ grouped, how it looks and where it sits on screen.
 - **Quest notes.** Right-click a quest > Add Note to leave yourself a reminder ("need a group", "drops from the ogres"). It shows in the quest's tooltip, a small note icon marks the quest (Show Note Icon, Appearance > Quest Names), and it's cleared when you turn the quest in. Saved per character.
 - **Modern skin.** A dark rounded panel with level badges, quest type labels, counts on the right and rounded progress bars (Appearance > Skin). New installs start on Modern; Classic is the original look.
 - **XP bar.** A thin bar under the header shows how far you are through your level, with the XP from quests that are ready to turn in drawn on top. It turns gold and the header says **Level up!** when handing them in would level you. Hover the header for the numbers and your rested XP.
-- **Quest item hotkey.** Bind a key to **Use Quest Item** (Key Bindings > AddOns > JTS Quest Tracker): it uses the item of your focused quest, or the closest quest that has one, and that item's button shows the key. Settings: Buttons > Quest Item Key.
+- **Quest item hotkey.** Set a key in **Buttons > Quest Item Key** (or Key Bindings > AddOns > JTS Quest Tracker > Use Quest Item): it uses the item of your focused quest, or the closest quest that has one, and that item's button shows the key. Settings: Buttons > Quest Item Key.
 - **Help out in the world.** Highlight Quest Objects marks and outlines the nearest thing you can use (WoW's own Interact Key icons), quest item buttons glow when your target is in range, and enemies you still need for a quest get a gold **!** by their nameplate.
 - **Clean Up Quest Log.** Right-click the tracker header (or `/jtsqt cleanup`) to abandon all your grey and failed quests in one go. It lists them and asks first; pinned quests and grey quests that are ready to turn in are kept.
 - **Masque.** With Masque installed, the quest item buttons can wear your Masque skin (Masque > JTS Quest Tracker > Quest Items).
@@ -129,6 +129,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **2.0.1** Fixed: the XP bar now stays pinned with the header when you scroll down (Keep Header in View). The quest
+  item hotkey can be set right in the settings (Buttons > Quest Item Key > Key).
 - **2.0.0** Modern skin (Appearance > Skin; the default for new installs): dark rounded panel, level badges,
   quest type labels, counts on the right, rounded progress bars, check marks and a "Ready to turn in" pill.
   XP bar under the header, with the XP from quests ready to turn in drawn on top (gold, and "Level up!", when they
