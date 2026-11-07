@@ -246,10 +246,22 @@ local FEATURES = {
         get = function() return p().NameplateQuestIcons ~= false end,
         set = function(v) p().NameplateQuestIcons = v; if JQT.UpdateNameplateQuestIcons then JQT:UpdateNameplateQuestIcons() end end
     },
+
+    -- 2.0.5
+    {
+        title = "Hide the Map's Quest Log", group = "Tracker", added = "2.0.5",
+        text = "The map opens without its quest log for now. The arrow at the bottom of the map still opens it.",
+        get = function() return p().HideMapQuestLog ~= false end,
+        set = function(v)
+            local option = JQT.mapQuestLogOptions and JQT.mapQuestLogOptions().hideMapQuestLog;
+            if option then option.set(nil, v) else p().HideMapQuestLog = v end
+        end
+    },
 };
 
 -- Extra lines for the "New in" page, per version (things without an on/off switch).
 local NEW_NOTES = {
+    ["2.0.5"] = "|cffffd100Also new:|r more room above and below quest names so they aren't cut off (Appearance > Quest Names > Space Around Quest Names; 0 is the old look)",
     ["2.0.0"] = "|cffffd100Also new:|r bind a key to |cffffffffUse Quest Item|r (Key Bindings > AddOns > JTS Quest Tracker): it uses the focused or closest quest's item  ·  Safe to try: everything here can be turned off again",
     ["1.5.0"] = "|cffffd100Also new:|r right-click the tracker header > Clean Up Quest Log abandons your grey and failed quests in one go (it lists them first)  ·  /jtsqt cleanup",
     ["1.4.0"] = "|cffffd100Also new:|r Masque can skin the quest item buttons (Masque > JTS Quest Tracker > Quest Items)  ·  right-click a quest for a TomTom waypoint",
