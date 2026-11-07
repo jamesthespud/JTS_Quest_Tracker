@@ -113,6 +113,7 @@ local function watchQuestLogClosing()
     map:HookScript("OnHide", function()
         C_Timer.After(0, function()
             QLH:OnQuestLogClosed();
+            if JQT.ApplyMapQuestLog then JQT:ApplyMapQuestLog() end
             if JQT.tracker then JQT:RefreshView() end
         end);
     end);

@@ -286,7 +286,7 @@ JQT.raidFilterOptions = function()
 end
 
 JQT.visibilityOptions = function()
-    return {
+    local group = {
         name = "Visibility",
         type = "group",
         inline = true,
@@ -331,4 +331,11 @@ JQT.visibilityOptions = function()
             },
         }
     };
+
+    -- Hide the Map's Quest Log (MapQuestLog.lua).
+    if JQT.mapQuestLogOptions then
+        for key, option in pairs(JQT.mapQuestLogOptions()) do group.args[key] = option end
+    end
+
+    return group;
 end

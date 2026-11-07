@@ -129,6 +129,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **2.0.5** The world map opens without its quest log panel (Hide the Map's Quest Log, Frame Settings > Visibility;
+  on by default), since its zones won't fold while the tracker runs. The arrow at the bottom of the map still opens it.
 - **2.0.4** Fixed: zones in the world map's quest log can be folded again (the tracker no longer reads the quest
   log while the map is open; it catches up when the map closes). More room above and below quest names so they
   aren't cut off (Appearance > Quest Names > Space Around Quest Names).
