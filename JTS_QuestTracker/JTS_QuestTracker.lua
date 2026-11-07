@@ -103,7 +103,29 @@ function JQT:OnPlayerEnteringWorld()
     end
 end
 
+-- While the world map (and its quest log) is open the tracker leaves the quest log alone
+-- (Compat:IsQuestLogOpen); when it closes, read the log again and redraw once.
+local function watchQuestLogClosing()
+    local map = _G.WorldMapFrame;
+    if JQT.watchingMapClose or not map or type(map.HookScript) ~= "function" then return end
+    JQT.watchingMapClose = true;
+
+    map:HookScript("OnHide", function()
+        C_Timer.After(0, function()
+            QLH:OnQuestLogClosed();
+            if JQT.tracker then JQT:RefreshView() end
+        end);
+    end);
+end
+
+local mapWatcher = CreateFrame("Frame");
+mapWatcher:RegisterEvent("ADDON_LOADED");
+mapWatcher:SetScript("OnEvent", function(_, _, name)
+    if name == "Blizzard_WorldMap" then pcall(watchQuestLogClosing) end
+end);
+
 function JQT:Initialize()
+    pcall(watchQuestLogClosing);
     if self.HookOptionsPanels then
         self:HookOptionsPanels();
     end
@@ -792,6 +814,9 @@ function JQT:AddQuest(quest, parent)
             or (p.ColorHeadersByDifficultyLevel and self:GetDifficultyColor(quest.difficulty) or p.QuestHeaderFontColor),
         container = questContainer
     });
+
+    -- Room above and below the quest name, so tall letters (and taller fonts) aren't cut off.
+    questContainer.headerFont:SetNamePadding(p.QuestNameSpacing or 3);
 
     -- "Time left: 4:32" for timed quests (Timers.lua).
     if self.AddQuestTimer then

@@ -129,6 +129,9 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **2.0.4** Fixed: zones in the world map's quest log can be folded again (the tracker no longer reads the quest
+  log while the map is open; it catches up when the map closes). More room above and below quest names so they
+  aren't cut off (Appearance > Quest Names > Space Around Quest Names).
 - **2.0.3** Nine more fonts come with the tracker (Barlow Semi Condensed, Fira Sans Condensed, PT Sans Narrow,
   Ubuntu Condensed, Oswald, Titillium Web, Rajdhani, Alegreya Sans SC, Cinzel), also shared with other addons
   through SharedMedia. Modern skin: easier-to-read numbers. Level badges are bigger and no longer outlined (the outline smudged

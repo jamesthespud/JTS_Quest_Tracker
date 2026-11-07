@@ -124,6 +124,7 @@ CONSTANTS.DB_DEFAULTS = {
         ShowForeverMarker = true,
         ShowQuestNoteIcon = true,
         ShowXPBar = true,
+        QuestNameSpacing = 3, -- px above and below each quest name
         QuestItemKeyFocusFirst = true,
         QuestItemKeyLabel = true,
         CombatVisibility = "Show",

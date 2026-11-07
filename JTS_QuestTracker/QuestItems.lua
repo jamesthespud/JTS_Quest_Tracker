@@ -140,6 +140,9 @@ local function onUpdate(button, elapsed)
     if button.rangeTimer > 0 then return end
     button.rangeTimer = 0.2;
 
+    -- While the quest log (world map) is open, leave the range as it was (see Compat:IsQuestLogOpen).
+    if Compat:IsQuestLogOpen() then return end
+
     if not button.logIndex or type(IsQuestLogSpecialItemInRange) ~= "function" then
         button.range:Hide();
         setGlow(button, false);

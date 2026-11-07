@@ -33,6 +33,7 @@ function Font:OnAcquire()
         self.barFill:Hide();
     end
 
+    self.namePadY = 0;
     self.font:ClearAllPoints();
     self.font:SetPoint("TOPLEFT", 0, 0);
     self.font:SetPoint("RIGHT", 0, 0);
@@ -69,7 +70,30 @@ function Font:_barExtra()
 end
 
 function Font:_textHeight()
-    return self.font:GetHeight() + self:_barExtra();
+    return self.font:GetHeight() + 2 * (self.namePadY or 0) + self:_barExtra();
+end
+
+-- Extra space above and below the text (quest names), so tall letters and fonts aren't cut off.
+-- Tells the rows above about the change in height.
+function Font:SetNamePadding(pad)
+    pad = math.max(0, tonumber(pad) or 0);
+    if pad == (self.namePadY or 0) then return end
+
+    local before = self:GetFullHeight();
+    self.namePadY = pad;
+
+    if self.ModernLayout and self.modernLeft ~= nil then
+        self:ModernLayout();
+    else
+        self.font:ClearAllPoints();
+        self.font:SetPoint("TOPLEFT", 0, -pad);
+        self.font:SetPoint("RIGHT", 0, 0);
+    end
+
+    self:SetHeight(self:_textHeight());
+
+    local delta = self:GetFullHeight() - before;
+    if delta ~= 0 then self:UpdateParentsHeight(delta) end
 end
 
 function Font:_layoutBar()

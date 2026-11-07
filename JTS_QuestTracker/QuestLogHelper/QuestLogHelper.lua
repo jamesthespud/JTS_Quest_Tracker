@@ -201,8 +201,27 @@ local function doRefresh(self)
 end
 
 local refreshing, refreshQueued = false, false;
+local deferredUntilMapCloses = false; -- a refresh is waiting for the quest log to close
+
+-- Called when the world map (with the quest log) closes.
+function helper:OnQuestLogClosed()
+    if deferredUntilMapCloses then
+        deferredUntilMapCloses = false;
+        self:Refresh();
+        return true;
+    end
+
+    return false;
+end
+
 
 function helper:Refresh()
+    -- Hands off the quest log while it is open (Compat:IsQuestLogOpen): read it once it closes.
+    if quests and Compat:IsQuestLogOpen() then
+        deferredUntilMapCloses = true;
+        return quests;
+    end
+
     -- Reading quest details can fire QUEST_LOG_UPDATE again; don't recurse.
     if refreshing then
         refreshQueued = true;

@@ -37,6 +37,25 @@ function Compat:GetWowheadURL(questID)
     return "https://www.wowhead.com/forever/quest=" .. tostring(questID);
 end
 
+-- ---------------------------------------------------------------------------
+-- Hands off the quest log while it is open
+-- ---------------------------------------------------------------------------
+
+--[[
+    On WoW Forever the quest log lives in the world map. While it is open, we don't ask the game
+    anything about quests by their place in the log (items, item range, descriptions, rewards):
+    folding a zone in the log fires a quest log update, and asking about quests by position right
+    then made the zone open again, so players couldn't fold zones (2.0.4). Answers we already have
+    are reused, and everything is read again once the map closes.
+]]
+function Compat:IsQuestLogOpen()
+    local map = _G.WorldMapFrame;
+
+    return map ~= nil and type(map.IsShown) == "function" and map:IsShown() and true or false;
+end
+
+local itemCache, rewardXPCache, rewardCache = {}, {}, {};
+
 function Compat:GetLogIndex(questID)
     local index = questID and try(Q("GetLogIndexForQuestID"), questID);
 
@@ -94,6 +113,8 @@ end
 
 -- The short "objectives" text of a quest (shown for quests without objectives).
 function Compat:GetQuestSummary(questID)
+    if self:IsQuestLogOpen() then return nil end
+
     local index = self:GetLogIndex(questID);
     if not index then return nil end
 
@@ -275,10 +296,15 @@ end
 
 -- XP the quest gives when you turn it in (0 when none, or at max level).
 function Compat:GetQuestRewardXP(questID)
-    local xp = questID and try(_G.GetQuestLogRewardXP, questID);
+    if not questID then return 0 end
+    if self:IsQuestLogOpen() then return rewardXPCache[questID] or 0 end
+
+    local xp = try(_G.GetQuestLogRewardXP, questID);
     local ok, value = pcall(function() return (tonumber(xp) or 0) > 0 and tonumber(xp) or 0 end);
 
-    return ok and value or 0;
+    rewardXPCache[questID] = ok and value or 0;
+
+    return rewardXPCache[questID];
 end
 
 local function rewardItems(countFn, infoFn, questID)
@@ -302,17 +328,20 @@ end
 ]]
 function Compat:GetQuestRewards(questID)
     if not questID then return nil end
+    if self:IsQuestLogOpen() then return rewardCache[questID] end
 
     if type(_G.HaveQuestRewardData) == "function" and try(_G.HaveQuestRewardData, questID) == false then
         return nil;
     end
 
-    return {
+    rewardCache[questID] = {
         xp = self:GetQuestRewardXP(questID),
         money = tonumber((try(_G.GetQuestLogRewardMoney, questID))) or 0,
         items = rewardItems(_G.GetNumQuestLogRewards, _G.GetQuestLogRewardInfo, questID),
         choices = rewardItems(function(id) return _G.GetNumQuestLogChoices(id, true) end, _G.GetQuestLogChoiceInfo, questID)
     };
+
+    return rewardCache[questID];
 end
 
 -- ---------------------------------------------------------------------------
@@ -321,19 +350,31 @@ end
 
 -- Returns link, texture, charges, showWhenComplete, logIndex, or nil if the quest has no usable item.
 function Compat:GetQuestItem(questID)
+    if not questID then return nil end
+
+    if self:IsQuestLogOpen() then
+        local cached = itemCache[questID];
+        if not cached then return nil end
+        return cached[1], cached[2], cached[3], cached[4], cached[5];
+    end
+
     local index = self:GetLogIndex(questID);
-    if not index then return nil end
+    local link, texture, charges, showWhenComplete;
+    if index then link, texture, charges, showWhenComplete = try(_G.GetQuestLogSpecialItemInfo, index) end
 
-    local link, texture, charges, showWhenComplete = try(_G.GetQuestLogSpecialItemInfo, index);
+    if not link or not texture then
+        itemCache[questID] = false;
+        return nil;
+    end
 
-    if not link or not texture then return nil end
+    itemCache[questID] = { link, texture, charges, showWhenComplete, index };
 
     return link, texture, charges, showWhenComplete, index;
 end
 
 -- Returns start, duration, enable for the quest item's cooldown (or nil).
 function Compat:GetQuestItemCooldown(logIndex)
-    if logIndex then
+    if logIndex and not self:IsQuestLogOpen() then
         return try(_G.GetQuestLogSpecialItemCooldown, logIndex);
     end
 end

@@ -111,7 +111,7 @@ end
 
 function Font:ModernLayout()
     self.font:ClearAllPoints();
-    self.font:SetPoint("TOPLEFT", self.modernLeft or 0, -(self.modernPadY or 0));
+    self.font:SetPoint("TOPLEFT", self.modernLeft or 0, -((self.modernPadY or 0) + (self.namePadY or 0)));
     self.font:SetPoint("RIGHT", -(self.modernRight or 0), 0);
 end
 
@@ -142,7 +142,7 @@ function Font:ModernBadge(text, bg)
 
     d.badgeBg:SetVertexColor(bg.r, bg.g, bg.b, 1);
     d.badgeBg:ClearAllPoints();
-    d.badgeBg:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 2);
+    d.badgeBg:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 2 - (self.namePadY or 0));
     d.badgeBg:SetSize(width, height);
     d.badgeText:ClearAllPoints();
     d.badgeText:SetPoint("CENTER", d.badgeBg, "CENTER", 0, 0);
@@ -150,7 +150,7 @@ function Font:ModernBadge(text, bg)
     d.badgeText:Show();
 
     self.modernLeft = width + 6;
-    self.modernMinHeight = height - 1;
+    self.modernMinHeight = height - 2 + 2 * (self.namePadY or 0);
     self:ModernLayout();
 end
 
