@@ -520,7 +520,8 @@ local function styleQuest(self, quest, questContainer)
 
     restyle(title, function()
         title:SetLabel(self:GetModernQuestTitle(quest));
-        title:SetColor(flashing and self:GetStatusColor("flash") or TEXT);
+        -- The name keeps the colour the tracker gave it (Appearance > Quest Names: by difficulty or
+        -- your own colour, or flashing), the same as in Classic.
 
         local level = tonumber(quest.level);
         if level and level > 0 then
@@ -590,10 +591,14 @@ local function styleQuest(self, quest, questContainer)
                         row:SetAlpha(0.45);
                     else
                         row:SetLabel(name);
-                        if count then row:ModernRight(count, TEXT) end
+                        -- The count follows the objective's colour when that carries meaning
+                        -- (colour by progress, or flashing); otherwise it stays bright.
+                        if count then
+                            row:ModernRight(count, (flashing or p.ObjectiveColorByProgress) and row.color or TEXT);
+                        end
                     end
 
-                    if not flashing then row:SetColor(MUTED) end
+                    -- The objective keeps the colour the tracker gave it (Appearance > Objectives).
                     row:ModernBar();
                 end
             end);

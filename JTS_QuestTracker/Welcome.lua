@@ -257,10 +257,19 @@ local FEATURES = {
             if option then option.set(nil, v) else p().HideMapQuestLog = v end
         end
     },
+
+    -- 2.0.6
+    {
+        title = "Colour Quest Names by Difficulty", group = "Tracker", added = "2.0.6",
+        text = "Now in the Modern skin too. Untick to use your own colour (Appearance > Quest Names).",
+        get = function() return p().ColorHeadersByDifficultyLevel ~= false end,
+        set = function(v) p().ColorHeadersByDifficultyLevel = v; refresh() end
+    },
 };
 
 -- Extra lines for the "New in" page, per version (things without an on/off switch).
 local NEW_NOTES = {
+    ["2.0.6"] = "|cffffd100Also new:|r in the Modern skin, objectives follow your objective colour and Colour by Progress (Appearance > Objectives)",
     ["2.0.5"] = "|cffffd100Also new:|r more room above and below quest names so they aren't cut off (Appearance > Quest Names > Space Around Quest Names; 0 is the old look)",
     ["2.0.0"] = "|cffffd100Also new:|r bind a key to |cffffffffUse Quest Item|r (Key Bindings > AddOns > JTS Quest Tracker): it uses the focused or closest quest's item  ·  Safe to try: everything here can be turned off again",
     ["1.5.0"] = "|cffffd100Also new:|r right-click the tracker header > Clean Up Quest Log abandons your grey and failed quests in one go (it lists them first)  ·  /jtsqt cleanup",
