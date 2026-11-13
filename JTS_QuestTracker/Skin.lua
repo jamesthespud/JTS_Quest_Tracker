@@ -241,6 +241,7 @@ end
 local fontAcquire = Font.OnAcquire;
 function Font:OnAcquire(...)
     fontAcquire(self, ...);
+    self.modernMeasure = nil; -- a re-measure still waiting from the row's last use is dropped
     self:ModernReset();
     self:ModernLayout();
 end
@@ -282,6 +283,14 @@ function Container:OnAcquire(...)
 end
 
 -- Re-measures a row after restyling it, and tells the rows above about any change in height.
+local function remeasure(font)
+    local before = font:GetFullHeight();
+    font:SetHeight(font:_textHeight());
+
+    local delta = font:GetFullHeight() - before;
+    if delta ~= 0 then font:UpdateParentsHeight(delta) end
+end
+
 local function restyle(font, fn)
     local before = font:GetFullHeight();
     fn();
@@ -289,6 +298,16 @@ local function restyle(font, fn)
 
     local delta = font:GetFullHeight() - before;
     if delta ~= 0 then font:UpdateParentsHeight(delta) end
+
+    -- Modern squeezes the text between the level badge and the right-hand label, and the game
+    -- only works out how wrapped text lays out a moment later: a name that wraps because of the
+    -- squeeze ("Conflict at Darkspear / Islands") would keep a one-line row and run into the
+    -- objective below. Measure again on the next frame (unless the row has been reused since).
+    local token = {};
+    font.modernMeasure = token;
+    C_Timer.After(0, function()
+        if font.modernMeasure == token and not font.__released and font:IsShown() then remeasure(font) end
+    end);
 end
 
 -- ---------------------------------------------------------------------------
@@ -471,7 +490,8 @@ function JQT:StyleStickyHeader(sticky, visible, questCount)
     if text then font:ModernRight(text, color, "pill") end
 
     local opacity = tonumber(self.db.profile.ModernOpacity) or 0.88;
-    sticky.bg:SetColorTexture(PANEL.r, PANEL.g, PANEL.b, math.max(opacity, 0.92));
+    -- Solid, so the rows scrolling underneath don't show through.
+    sticky.bg:SetColorTexture(PANEL.r, PANEL.g, PANEL.b, 1);
     sticky:SetHeight((font:GetRealHeight() or 12) + 14);
 end
 
