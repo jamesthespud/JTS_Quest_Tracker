@@ -93,6 +93,17 @@ local function fill()
 
     -- Skins (Skin.lua) can restyle the copy like the real header.
     if JQT.StyleStickyHeader then pcall(JQT.StyleStickyHeader, JQT, sticky, headerArgs[1], headerArgs[2]) end
+
+    -- A header that wraps ("6,000" / "XP") is only measured right a moment later: size the copy
+    -- again on the next frame, so the second line doesn't run into the XP bar.
+    local padding = sticky:GetHeight() - (text:GetRealHeight() or 12);
+    local token = {};
+    sticky.measure = token;
+    C_Timer.After(0, function()
+        if sticky.measure ~= token then return end
+        text:SetHeight(text:_textHeight());
+        sticky:SetHeight((text:GetRealHeight() or 12) + padding);
+    end);
 end
 
 -- Pinned to the top of the tracker, or to the bottom when the header sits below the list.

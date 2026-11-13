@@ -131,7 +131,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 - **2.0.6** Modern skin: quest names and objectives follow your colour settings (colour by difficulty, your own
   quest name and objective colours, colour by progress), like Classic. Long quest names that wrap onto a second line no longer
-  run into the objective below, and the pinned header is solid so rows don't show through it.
+  run into the objective below, a header that wraps no longer runs into the XP bar, and the pinned header is solid
+  so rows don't show through it.
 - **2.0.5** The world map opens without its quest log panel (Hide the Map's Quest Log, Frame Settings > Visibility;
   on by default), since its zones won't fold while the tracker runs. The arrow at the bottom of the map still opens it.
 - **2.0.4** Fixed: zones in the world map's quest log can be folded again (the tracker no longer reads the quest
