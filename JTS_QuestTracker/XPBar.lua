@@ -8,6 +8,10 @@ local _, ns = ...
     are enough to level you, that part turns gold and the header says "Level up!". Hover the
     header for the numbers (and your rested XP).
 
+    2.1: rested XP is drawn as a faint band ahead of the fill, and the header tooltip shows this
+    session's stats (quests turned in, XP per hour, time to level). A session starts when you log
+    in; a /reload keeps it going.
+
     Hidden at max level and when XP gain is turned off. Uses the tracker's own progress bar on the
     header row (Font:SetProgress), so it follows Progress Bar Thickness and both skins.
 ]]
@@ -18,6 +22,7 @@ local Font = JTS_QuestTrackerFont;
 local FILL = { r = 0.42, g = 0.36, b = 1.0 };         -- XP you have
 local PENDING = { r = 0.40, g = 0.85, b = 1.0, a = 0.55 }; -- XP waiting in finished quests
 local LEVEL_UP = { r = 1.0, g = 0.82, b = 0.0, a = 0.85 }; -- ...when it is enough to level
+local RESTED = { r = 0.42, g = 0.36, b = 1.0, a = 0.35 };  -- rested XP: the fill's colour, faint
 
 local function call(fn, ...)
     if type(fn) ~= "function" then return nil end
@@ -77,17 +82,32 @@ local layoutBar = Font._layoutBar;
 function Font:_layoutBar(...)
     layoutBar(self, ...);
 
-    local texture = self.xpPendingTexture;
-    if not texture then return end
-
     local width = self:GetWidth();
     local progress = self.progress or 0;
+    local barHeight = self.barFill and self.barFill:GetHeight() or 3;
+
+    -- Rested band (2.1): from the end of the fill, under the pending shade.
+    local band = self.xpRestedTexture;
+    if band then
+        local rested = math.min(self.xpRested or 0, 1 - progress);
+        if self.progress ~= nil and width and width > 0 and rested > 0 then
+            band:ClearAllPoints();
+            band:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", width * progress, 0);
+            band:SetSize(math.max(1, width * rested), barHeight);
+            band:Show();
+        else
+            band:Hide();
+        end
+    end
+
+    local texture = self.xpPendingTexture;
+    if not texture then return end
     local pending = math.min(self.xpPending or 0, 1 - progress);
 
     if self.progress ~= nil and width and width > 0 and pending > 0 then
         texture:ClearAllPoints();
         texture:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", width * progress, 0);
-        texture:SetSize(math.max(1, width * pending), self.barFill and self.barFill:GetHeight() or 3);
+        texture:SetSize(math.max(1, width * pending), barHeight);
         texture:Show();
     else
         texture:Hide();
@@ -101,19 +121,23 @@ function Font:OnAcquire(...)
     fontAcquire(self, ...);
 
     self.xpPending = nil;
+    self.xpRested = nil;
     self.isXPBar = nil;
     if self.xpPendingTexture then self.xpPendingTexture:Hide() end
+    if self.xpRestedTexture then self.xpRestedTexture:Hide() end
 end
 
 local function setBar(font)
-    local level, current, max = JQT:GetXPState();
+    local level, current, max, rested = JQT:GetXPState();
 
     if not enabled() or not level then
         if font.isXPBar then
             font.isXPBar = nil;
             font.xpPending = nil;
+            font.xpRested = nil;
             font:SetProgress(nil);
             if font.xpPendingTexture then font.xpPendingTexture:Hide() end
+            if font.xpRestedTexture then font.xpRestedTexture:Hide() end
         end
         return;
     end
@@ -125,11 +149,17 @@ local function setBar(font)
         font.xpPendingTexture = font:CreateTexture(nil, "OVERLAY", nil, 1);
     end
 
+    if not font.xpRestedTexture then
+        font.xpRestedTexture = font:CreateTexture(nil, "OVERLAY", nil, 0);
+        font.xpRestedTexture:SetColorTexture(RESTED.r, RESTED.g, RESTED.b, RESTED.a);
+    end
+
     local shade = levelsUp and LEVEL_UP or PENDING;
     font.xpPendingTexture:SetColorTexture(shade.r, shade.g, shade.b, shade.a);
 
     font.isXPBar = true;
     font.xpPending = pending / max;
+    font.xpRested = (rested or 0) / max;
     font:SetProgress(current / max, FILL);
 end
 
@@ -218,6 +248,98 @@ if summaryText then
 end
 
 -- ---------------------------------------------------------------------------
+-- Session stats (2.1): kept per character, started at login, kept through /reload
+-- ---------------------------------------------------------------------------
+
+local MIN_SESSION_SECONDS = 180; -- before this, XP per hour is too jumpy to show
+
+local session;                  -- JQT.db.char.Session
+local loginKnown, isLogin = false, false;
+local lastLevel, lastXP, lastMax;
+
+local function now() return (time and time()) or 0 end
+
+local function seed()
+    lastLevel, lastXP, lastMax = JQT:GetXPState();
+end
+
+local function startSession()
+    if session or not loginKnown or not JQT.db then return end
+
+    local saved = JQT.db.char.Session;
+    if isLogin or type(saved) ~= "table" or not saved.start then
+        saved = { start = now(), xp = 0, quests = 0 };
+        JQT.db.char.Session = saved;
+    end
+
+    session = saved;
+    seed();
+end
+
+local function formatDuration(seconds)
+    seconds = math.floor(seconds + 0.5);
+    local hours = math.floor(seconds / 3600);
+    local minutes = math.floor((seconds % 3600) / 60);
+
+    if hours >= 100 then return "100h+" end
+    if hours > 0 then return hours .. "h " .. minutes .. "m" end
+    if minutes > 0 then return minutes .. "m" end
+    return "<1m";
+end
+
+-- XP gained since the last update, across a level-up.
+local function countXP()
+    if not session then return end
+
+    local level, current, max = JQT:GetXPState();
+    if not level or not lastLevel then
+        seed();
+        return;
+    end
+
+    local gained = 0;
+    if level == lastLevel and current >= lastXP then
+        gained = current - lastXP;
+    elseif level == lastLevel + 1 or (level == lastLevel and current < lastXP) then
+        -- Levelled up (the level number can lag behind the XP for a moment).
+        gained = (lastMax - lastXP) + current;
+        if level == lastLevel then level = lastLevel + 1 end
+    end
+
+    if gained > 0 then session.xp = (session.xp or 0) + gained end
+    lastLevel, lastXP, lastMax = level, current, max;
+end
+
+-- quests, xp gained, xp per hour (nil until the session is a few minutes old)
+function JQT:GetSessionStats()
+    if not session then return end
+
+    local elapsed = now() - (session.start or now());
+    local xp = session.xp or 0;
+    local perHour = (elapsed >= MIN_SESSION_SECONDS and xp > 0) and (xp / elapsed * 3600) or nil;
+
+    return session.quests or 0, xp, perHour;
+end
+
+local sessionEvents = CreateFrame("Frame");
+for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "QUEST_TURNED_IN" }) do
+    pcall(sessionEvents.RegisterEvent, sessionEvents, event);
+end
+
+sessionEvents:SetScript("OnEvent", function(_, event, arg1)
+    if event == "PLAYER_ENTERING_WORLD" then
+        if not loginKnown then
+            loginKnown, isLogin = true, arg1 == true;
+            startSession();
+        end
+    elseif event == "QUEST_TURNED_IN" and session then
+        session.quests = (session.quests or 0) + 1;
+    end
+end);
+
+hooksecurefunc(JQT, "Initialize", function() startSession() end);
+
+-- ---------------------------------------------------------------------------
 -- Tooltip
 -- ---------------------------------------------------------------------------
 
@@ -248,6 +370,23 @@ function JQT:ShowXPTooltip(owner)
     end
 
     GameTooltip:AddDoubleLine("To level " .. (level + 1), self:FormatNumber(math.max(0, max - current)) .. " XP", H.r, H.g, H.b, H.r, H.g, H.b);
+
+    -- This session (2.1)
+    local quests, gained, perHour = self:GetSessionStats();
+    if quests then
+        local G = GRAY_FONT_COLOR or { r = 0.6, g = 0.6, b = 0.6 };
+        GameTooltip:AddLine(" ");
+        GameTooltip:AddLine("This session", N.r, N.g, N.b);
+        GameTooltip:AddDoubleLine("Quests turned in", tostring(quests), H.r, H.g, H.b, H.r, H.g, H.b);
+        GameTooltip:AddDoubleLine("XP gained", self:FormatNumber(gained), H.r, H.g, H.b, H.r, H.g, H.b);
+        if perHour then
+            GameTooltip:AddDoubleLine("XP per hour", self:FormatNumber(math.floor(perHour + 0.5)), H.r, H.g, H.b, H.r, H.g, H.b);
+            GameTooltip:AddDoubleLine("Time to level", "~" .. formatDuration(math.max(0, max - current) / perHour * 3600), H.r, H.g, H.b, H.r, H.g, H.b);
+        else
+            GameTooltip:AddLine("XP per hour shows after a few minutes of questing.", G.r, G.g, G.b, true);
+        end
+    end
+
     GameTooltip:Show();
 end
 
@@ -262,6 +401,8 @@ for _, event in ipairs({ "PLAYER_XP_UPDATE", "PLAYER_LEVEL_UP", "UPDATE_EXHAUSTI
 end
 
 events:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_XP_UPDATE" then pcall(countXP) end
+
     if not JQT.tracker or not JQT.db then return end
 
     -- A new level can change the header text ("Level up!" goes away) and turn quests grey: redraw.

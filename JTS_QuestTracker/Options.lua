@@ -481,6 +481,15 @@ local function windowCategory()
             maxHeight = O{ name = L('SETTINGS_MAX_HEIGHT_NAME'), arg = "MaxHeight", type = "range", width = 1.6,
                 min = 100, max = math.ceil(GetScreenHeight() * UIParent:GetEffectiveScale()), step = 1, bigStep = 10,
                 set = SetTracker("maxHeight") },
+            scale = O{ name = "Tracker Scale",
+                desc = "Makes the whole tracker bigger or smaller: text, rows, quest item buttons and all. It stays where it is on screen.",
+                arg = "TrackerScale", type = "range", width = 1.6,
+                min = 0.5, max = 2, step = 0.05, isPercent = true,
+                set = function(info, value)
+                    JQT.db.profile[info.arg] = value;
+                    JQT.tracker:UpdateSettings({ scale = value });
+                    if JQT.RefreshQuestItemData then JQT:RefreshQuestItemData() end
+                end },
             spacer2 = Spacer(),
             resetPosition = O{ name = L('SETTINGS_RESET_POSITION_NAME'), type = "execute", width = 0.8,
                 func = function()

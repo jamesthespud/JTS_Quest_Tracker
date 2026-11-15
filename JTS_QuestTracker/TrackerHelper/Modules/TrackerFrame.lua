@@ -129,6 +129,11 @@ function Frame:UpdateSettings(settings)
         self:SetBackgroundColor(settings.backgroundColor);
     end
 
+    -- Before the position: positions are in screen units and converted for the scale.
+    if settings.scale ~= nil then
+        self:SetTrackerScale(settings.scale);
+    end
+
     -- Before the position: it says which edge the position is for.
     if settings.growUp ~= nil then
         self.growUp = settings.growUp and true or false;
@@ -196,11 +201,30 @@ function Frame:SetGrowUp(growUp)
     return x, y;
 end
 
+-- Tracker scale (2.1): the whole tracker, text and all, bigger or smaller. Positions stay in screen
+-- (UIParent) units, so a saved position means the same spot at any scale, and changing the scale
+-- keeps the anchored corner where it is.
+function Frame:GetTrackerScale()
+    return self:GetScale() or 1;
+end
+
+function Frame:SetTrackerScale(scale)
+    scale = math.max(0.5, math.min(2, tonumber(scale) or 1));
+    if math.abs(scale - self:GetTrackerScale()) < 0.001 then return end
+
+    local x, y = self:GetPosition();
+    self:SetScale(scale);
+    if x and y then self:SetPosition(x, y) end
+end
+
 -- Offset of our top right corner (bottom right when growing up) from UIParent's top right corner
--- (what SetPosition expects).
+-- (what SetPosition expects), in screen (UIParent) units.
 function Frame:GetPosition()
+    local scale = self:GetTrackerScale();
     local x = self:GetRight();
     local y = self:IsGrowingUp() and self:GetBottom() or self:GetTop();
+    x = x and x * scale;
+    y = y and y * scale;
 
     local parentRight = UIParent:GetRight() or GetScreenWidth();
     local parentTop = UIParent:GetTop() or GetScreenHeight();
@@ -228,8 +252,10 @@ function Frame:SetPosition(x, y)
         y = current.y;
     end
 
+    -- Offsets are in our own (scaled) units.
+    local scale = self:GetTrackerScale();
     self:ClearAllPoints();
-    self:SetPoint(self:IsGrowingUp() and "BOTTOMRIGHT" or "TOPRIGHT", UIParent, "TOPRIGHT", x, y);
+    self:SetPoint(self:IsGrowingUp() and "BOTTOMRIGHT" or "TOPRIGHT", UIParent, "TOPRIGHT", x / scale, y / scale);
 
     self.position = { x = x, y = y };
 end

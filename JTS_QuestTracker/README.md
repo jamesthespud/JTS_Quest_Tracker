@@ -129,6 +129,9 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## Version history
 
+- **2.1.0** Tracker Scale slider (Frame Settings > Position & Size). Fade When Idle: the tracker fades while your
+  mouse isn't over it (Frame Settings > Visibility, off by default). Rested XP shows as a faint band on the XP bar, and
+  hovering the header shows this session's quests turned in, XP gained, XP per hour and time to level.
 - **2.0.6** Modern skin: quest names and objectives follow your colour settings (colour by difficulty, your own
   quest name and objective colours, colour by progress), like Classic. Long quest names that wrap onto a second line no longer
   run into the objective below, a header that wraps no longer runs into the XP bar, and the pinned header is solid

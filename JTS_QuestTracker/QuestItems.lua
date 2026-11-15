@@ -313,6 +313,8 @@ function JQT:LayoutQuestItems()
     local onRight = p.QuestItemSide == "Right";
     local uiScale = UIParent:GetEffectiveScale();
     local viewTop, viewBottom = tracker:GetTop(), tracker:GetBottom();
+    -- The buttons sit on UIParent, so they take the tracker's scale (Tracker Scale) by size.
+    size = math.floor(size * (tracker:GetEffectiveScale() / uiScale) + 0.5);
 
     local shown = 0;
 

@@ -76,6 +76,7 @@ function JQT:GetTrackerSettings()
     local p = self.db.profile;
 
     return {
+        scale = tonumber(p.TrackerScale) or 1,
         position = { x = p.PositionX, y = p.PositionY },
         width = p.Width,
         maxHeight = p.MaxHeight,

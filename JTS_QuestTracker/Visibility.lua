@@ -29,6 +29,7 @@ end
 local inCombat = false;
 local instanceType = "none";
 local override = false; -- shown by hand while a setting would hide it
+local idle = false;      -- Fade When Idle: the mouse isn't over the tracker
 
 local INSTANCE_SETTINGS = {
     party = { "HideInDungeons", "dungeons" },
@@ -103,12 +104,66 @@ function JQT:UpdateVisibility()
         alpha = math.max(0.1, math.min(1, tonumber(p.CombatFadeAlpha) or 0.35));
     end
 
+    -- Fade When Idle: faded until you point at it (whichever fade is stronger wins).
+    if idle and p.FadeWhenIdle then
+        alpha = math.min(alpha, math.max(0.05, math.min(1, tonumber(p.IdleFadeAlpha) or 0.4)));
+    end
+
     tracker:SetAlpha(alpha);
 
     if self.SetQuestItemAlpha then
         self:SetQuestItemAlpha(alpha);
     end
 end
+
+-- ---------------------------------------------------------------------------
+-- Fade When Idle: watch whether the mouse is over the tracker (or one of its item buttons)
+-- ---------------------------------------------------------------------------
+
+local function pointedAt(self)
+    local tracker = self.tracker;
+    if not tracker or not tracker:IsShown() then return true end
+
+    -- Moving it, or it's unlocked: keep it fully visible.
+    if not self:IsTrackerLocked() then return true end
+    if tracker.IsMouseOver and tracker:IsMouseOver() then return true end
+
+    for _, button in ipairs(self.GetQuestItemButtons and self:GetQuestItemButtons() or {}) do
+        if button:IsShown() and button:IsMouseOver() then return true end
+    end
+
+    return false;
+end
+
+local idleWatcher = CreateFrame("Frame");
+idleWatcher:Hide();
+
+local elapsedSince = 0;
+idleWatcher:SetScript("OnUpdate", function(_, elapsed)
+    elapsedSince = elapsedSince + elapsed;
+    if elapsedSince < 0.15 then return end
+    elapsedSince = 0;
+
+    local nowIdle = not pointedAt(JQT);
+    if nowIdle ~= idle then
+        idle = nowIdle;
+        JQT:UpdateVisibility();
+    end
+end);
+
+function JQT:UpdateIdleFade()
+    if self.db and self.db.profile.FadeWhenIdle then
+        idleWatcher:Show();
+    else
+        idleWatcher:Hide();
+        if idle then
+            idle = false;
+            self:UpdateVisibility();
+        end
+    end
+end
+
+hooksecurefunc(JQT, "Initialize", function(self) self:UpdateIdleFade() end);
 
 -- Hide by hand (saved per character).
 function JQT:SetTrackerHidden(hidden)
@@ -306,6 +361,18 @@ JQT.visibilityOptions = function()
                 min = 0.1, max = 0.9, step = 0.05, isPercent = true,
                 set = set,
                 disabled = function() return JQT.db.profile.CombatVisibility ~= "Fade" end
+            },
+            fadeIdle = {
+                name = "Fade When Idle", type = "toggle", arg = "FadeWhenIdle", width = 1.0, order = 2.1,
+                desc = "Fades the tracker when your mouse isn't over it, and brings it back the moment you point at it. Handy for a clean screen.",
+                set = function(info, value) JQT.db.profile[info.arg] = value; JQT:UpdateIdleFade() end
+            },
+            idleAlpha = {
+                name = "Idle Opacity", type = "range", arg = "IdleFadeAlpha", width = 1.2, order = 2.2,
+                desc = "How visible the tracker stays while you're not pointing at it.",
+                min = 0.05, max = 1, step = 0.05, isPercent = true,
+                set = function(info, value) JQT.db.profile[info.arg] = value; JQT:UpdateVisibility() end,
+                disabled = function() return not JQT.db.profile.FadeWhenIdle end
             },
             spacer = { name = " ", type = "description", width = "full", order = 3 },
             dungeons = {
