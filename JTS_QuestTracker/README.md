@@ -1,117 +1,140 @@
 # JTS Quest Tracker
 
-A clean, customizable quest tracker for World of Warcraft, built for **WoW Forever**. Part of the JTS Suite.
+**A clean, modern quest tracker for WoW Forever.** It replaces Blizzard's tracker with a tidy list that you control:
+what it shows, how it's sorted, how it looks and where it sits. Part of the JTS Suite.
 
 > **A fork of Butter Quest Tracker.** JTS Quest Tracker is my own fork of
 > [Butter Quest Tracker](https://github.com/butter-cookie-kitkat/ButterQuestTracker) by Butter Cookie Kitkat,
-> used under its MIT license. It started as a fixed and updated version of Butter Quest Tracker for WoW Forever
-> and now continues as a separate addon with its own features.
+> used under its MIT license. It started as a fixed and updated version for WoW Forever and is now a separate
+> addon with its own features.
 >
 > It is **not** made, endorsed or supported by Butter Cookie Kitkat. Please report problems with JTS Quest Tracker
 > to me, not to the original author.
 
-JTS Quest Tracker replaces Blizzard's quest tracker with a tidy list that you control: what it shows, how it is
-grouped, how it looks and where it sits on screen.
+**Download:** [GitHub Releases](https://github.com/jamesthespud/JTS_Quest_Tracker/releases) · CurseForge · Wago
 
-## What it adds over the original
+## New in 2.2
 
-- **Made for WoW Forever.** Built for Forever's modern quest API (it does not support other WoW clients).
-- **Pin quests.** Right-click a quest > Pin Quest. Pinned quests are always tracked, ignore the zone filter and sit first in their zone, marked with a small icon.
-- **Objective complete alert.** When an objective (or a whole quest) is finished the quest flashes briefly. Optional chat message and sound, and **Announce to Party** (on by default): your group sees `{star} JTS QT: Diseased Timber Wolf slain: 8/8 (Wolves Across the Border)` in party chat, like Questie's announce, even if they don't run Questie.
-- **Objective colors by progress.** Objectives shade from red to yellow to green as you get closer to done.
-- **Thin progress bars.** Optional slim bar under counted objectives such as 3/10, 2 to 6 pixels thick.
-- **Text outline and shadow.** Choose no outline, outline or thick outline, and default, strong or no shadow.
-- **Show/hide command and key binding.** `/jtsqt toggle`, `/jtsqt show`, `/jtsqt hide`, or bind a key under Esc > Options > Key Bindings > AddOns.
-- **Draggable scroll bar**, optionally visible while the mouse is over the tracker or all the time (Always Show Scroll Bar), and an adjustable **Scroll Speed** for the mouse wheel.
-- **Zone grouping.** Quests sit under collapsible zone headers. Your current zone comes first, the rest follow A to Z.
-- **Show Quest Level.** Optionally show `[12] Quest Name` or `Quest Name (12)`.
-- **Clearer difficulty colors** and **no tracking limit**.
-- **Color Blind Mode.** Covers every type of color vision deficiency: protanopia, protanomaly, deuteranopia, deuteranomaly, tritanopia, tritanomaly, achromatopsia, blue cone monochromacy and achromatomaly. It swaps the difficulty, progress, progress bar, turn-in, failed and flash colors for palettes checked with a color vision simulation. Optional **Difficulty Markers** (`!!` `!` `-` `--`) show difficulty without relying on color, and switch on by themselves in the no-color modes. Settings: Color Blind Mode.
-- **Quest item buttons.** Quests that give you an item to use get a button beside them: click to use, Shift-click to link it. Shows charges, cooldown and a range dot. Settings: Buttons.
-- **Quest tags.** `[E]` Elite, `[G3]` Group of 3, `[D]` Dungeon, `[R]` Raid, `[PvP]`, `[H]` Heroic, `[L]` Legendary after the quest name, or the full words. Settings: Appearance > Quest Names.
-- **Font picker.** Choose the game's fonts, nine fonts that come with the tracker, or any SharedMedia font. Settings: Appearance > Text.
-- **Alert sounds.** Pick separate sounds for "objective complete" and "quest complete" (game sounds or SharedMedia sounds), with a Play button to preview.
-- **Minimap button.** Left-click for settings, right-click to show/hide the tracker, drag to move. Works with minimap button bags and Titan Panel/ElvUI data bars when LibDBIcon is present. `/jtsqt minimap` shows or hides it.
-- **Profiles.** Every setting lives in a profile. All characters share "Default" until you choose otherwise; on the Profiles page you can switch, copy, create, reset or delete profiles, so a layout made on one character loads on any other.
-- **Import / export.** Turn your profile into one line of text to share or back up, and paste someone else's to load it (into your current profile or a new one).
-- **Quest focus.** Point WoW's built-in quest helper (the on-screen arrow with distance, the map waypoint and the highlighted objective area) at any quest: middle-click it, or use Focus in its right-click menu. The focused quest is marked in the tracker, and optional Auto-focus follows the quest you just progressed or accepted. Settings: Questing > Quest Focus.
-- **Helpful tooltips.** Hover a quest to see its level (in its difficulty color), its type, its summary and every objective with its count, plus what each click does.
-- **Grow Upwards.** Keep the tracker near the bottom of the screen: its bottom edge stays put and it grows up as you pick up quests, with the header below the list where it never moves (Header Position: Top / Bottom). Window > Position & Size.
-- **Lock in Combat.** The tracker can't be dragged while you fight (on by default; Window > Position & Size).
-- **Hide in combat or instances.** Fade the tracker or hide it while you fight, and hide it in dungeons, raids, or battlegrounds and arenas. Showing it by hand keeps it up until the fight ends or you leave. Settings: Window > Visibility.
-- **Dungeon Quests Only / Raid Quests Only.** Inside a dungeon the tracker lists only dungeon quests (the Dungeon or Heroic tag, or quests filed under the dungeon in your quest log); inside a raid, only raid quests (the Raid tag, or filed under the raid). Pinned quests still show. Both on by default; Tracking > Filters.
-- **Collapse All / Expand All.** Right-click the tracker header or a zone header, or use `/jtsqt collapse` and `/jtsqt expand`. Optional **Expand Current Zone Only** opens your zone and folds the others away as you travel.
-- **Quest log full warning.** When your log is nearly full the header adds `Log 37/40`, and `Log full` at 40 (Appearance > Tracker Header, warns from 36 by default).
-- **Ready to Turn In placement.** Put finished quests first or last instead of wherever your sorting puts them (Tracking > Sorting).
-- **Quest timers.** Timed quests show `Time left: 4:32` under their name, counting down and turning red in the last minute.
-- **Distance without Questie.** Sort by Quest Proximity now uses WoW Forever's own quest helper (the same distance its quest arrow shows), with Questie only filling in quests the game has no location for. Optional **Show Distance** puts `120 yd` after each quest name (Appearance > Quest Names).
-- **Share quests with your group.** Right-click the tracker header for Share All Quests, or a zone header to share just that zone's quests (`/jtsqt share` too). They go out one every 3 seconds so your group can take each one. In a group, dungeon and raid headers (like Wailing Caverns) also get a **Share all** button.
-- **Welcome screen.** On first login a short tour lists the features you might not know about, each with a checkbox to turn it on or off. After an update with new features you get a single **New in X.Y** page with just those. `/jtsqt welcome` (or General > Welcome Screen) opens the full tour again.
-- **New Forever quests marked.** Quests that are new in WoW Forever get a small blue infinity symbol in front of their name and a "New in WoW Forever" line in their tooltip (Appearance > Quest Names).
-- **Party progress.** Group members who also use JTS Quest Tracker see each other's progress on shared quests: by default a small group icon and how many of them have it after the quest name, or a row per member under it (`Mike  5/8`), and always in the quest tooltip. Only quest IDs and counts are shared, through hidden addon messages. Settings: Alerts & Group > Your Group (Show Party Progress As).
-- **Auto-accept and auto-turn-in.** Optional (both off by default): accept the quests NPCs offer and hand in finished ones. It stops when there's a reward to choose, skips grey quests unless you include them, and holding Shift lets you do it yourself. Questing > Auto Quest.
-- **Drag to reorder.** Sorting > Manual (drag to reorder): drag a quest up or down to put it where you want it (a green line shows where it lands). The order is saved per character; new quests go to the end. Reset Manual Order starts over.
-- **Collapse in Instances.** Optional: entering a dungeon, raid, battleground, arena or scenario folds the tracker up to its header, and leaving opens it again. Window > Visibility.
-- **TomTom.** With TomTom installed, right-click a quest for **TomTom Waypoint** (it uses the same location as WoW's quest arrow), and optionally get a waypoint every time you focus a quest. Questing > Other Addons.
-- **Quest notes.** Right-click a quest > Add Note to leave yourself a reminder ("need a group", "drops from the ogres"). It shows in the quest's tooltip, a small note icon marks the quest (Show Note Icon, Appearance > Quest Names), and it's cleared when you turn the quest in. Saved per character.
-- **Modern skin.** A dark rounded panel with level badges, quest type labels, counts on the right and rounded progress bars (General > Look). New installs start on Modern; Classic is the original look.
-- **XP bar.** A thin bar under the header shows how far you are through your level, with the XP from quests that are ready to turn in drawn on top. It turns gold and the header says **Level up!** when handing them in would level you. Hover the header for the numbers and your rested XP.
-- **Quest item hotkey.** Set a key in **Questing > Quest Item Key** (or Key Bindings > AddOns > JTS Quest Tracker > Use Quest Item): it uses the item of your focused quest, or the closest quest that has one, and that item's button shows the key. Settings: Questing > Quest Item Key.
-- **Help out in the world.** Highlight Quest Objects marks and outlines the nearest thing you can use (WoW's own Interact Key icons), quest item buttons glow when your target is in range, and enemies you still need for a quest get a gold **!** by their nameplate.
-- **Clean Up Quest Log.** Right-click the tracker header (or `/jtsqt cleanup`) to abandon all your grey and failed quests in one go. It lists them and asks first; pinned quests and grey quests that are ready to turn in are kept.
-- **Masque.** With Masque installed, the quest item buttons can wear your Masque skin (Masque > JTS Quest Tracker > Quest Items).
-- **Rewards in the tooltip.** Hover a quest to see its XP, money, items and the items you can choose from.
-- **Turn-in XP.** The header shows what you're carrying back to town, like `3 ready · 4,250 XP`, and stays pinned to the top while you scroll the list (Keep Header in View).
-- **Easy to scan.** Finished objectives fade back, zone headers show how many quests they hold (`Elwynn Forest (3)`), and collapsed zones stay collapsed after a reload.
-- **Safer startup.** If the tracker ever fails to start, you get Blizzard's default tracker back instead of none.
-- **Bug fixes** for quest names containing `%`, quests without objectives looking "updated", a broken locale fallback, moved popup fields and stale quest log indexes.
+- **Search the settings.** A Search page at the top of the settings finds any setting by name.
+- **A tidier settings layout:** General, Tracking, Questing, Appearance, Alerts & Group, Window, Profiles, Advanced.
+- **Minimal skin.** A faint panel and plain text, with no badges or pills.
+- **Ready to turn in, in its own section** above your zones, and an optional **Turned in today** list.
+- **Edit Mode.** Move and resize the tracker from WoW's own Edit Mode.
+- **TomTom + Questie.** Waypoints use Questie's location when WoW has none.
+
+New in 2.1: **Tracker Scale**, **Fade When Idle**, rested XP on the XP bar, and this session's quests, XP per hour and
+time to level in the header tooltip.
 
 ## Features
 
-- Move and lock the tracker anywhere on screen
-- Collapsible zone headers
-- Filter quests to your current zone or subzone
-- Manually track or untrack quests
-- Sort by level, percent complete, recently updated, quest proximity, or by hand (drag to reorder)
-- Color quest names by difficulty and optionally show their level
-- Adjust font size, colors, padding and the quest name format
-- Alt-click a quest for its Wowhead link, ctrl-click to link it in chat, shift-click to untrack it
-- Right-click a quest to pin, view, share or abandon it
+### Three looks
+- **Modern** (the default for new installs): a dark rounded panel, coloured level badges, quest type labels
+  (DUNGEON, PVP, ELITE), counts on the right and rounded progress bars.
+- **Minimal:** a faint panel and plain text. Zone names show − or + so you can see what's folded.
+- **Classic:** the original look.
+- Fonts (the game's, nine that come with the tracker, or any SharedMedia font), colours, sizes, outline, shadow,
+  spacing and progress bars are all adjustable, and **Tracker Scale** resizes the whole thing.
+
+### Questing made easier
+- **Quest item buttons** beside quests that give you an item: click to use, Shift-click to link. Charges, cooldown and
+  a range dot, and a glow when your target is in range. Masque skins supported.
+- **Quest item hotkey.** One key uses the item of your focused quest, or the closest quest that has one.
+- **Quest focus.** Middle-click a quest to point WoW's quest arrow and map waypoint at it; optional Auto-focus follows
+  the quest you just progressed.
+- **XP bar** under the header, with the XP from finished quests drawn on top. It turns **gold** and the header says
+  **Level up!** when turning them in would level you. Hover it for rested XP and this session's stats.
+- **Distance and proximity sorting** from WoW Forever's own quest helper, no Questie needed.
+- **Rewards in the tooltip** (XP, money, items, choices) and **turn-in XP** in the header, like `3 ready · 4,250 XP`.
+- **Quest notes.** Leave yourself a reminder on any quest; it shows in the tooltip.
+- **Help in the world.** Highlight Quest Objects marks the nearest thing you can use, and enemies you still need get
+  a gold **!** on their nameplate.
+- **Optional auto-accept and auto-turn-in** (off by default). Stops when there's a reward to choose; hold Shift to do
+  it yourself.
+- **Clean Up Quest Log** abandons your grey and failed quests in one go (it lists them and asks first).
+- **New in Forever** quests are marked with a small blue ∞.
+- **TomTom waypoints** from WoW's location, or Questie's when WoW has none.
+
+### Better in a group
+- **Party progress.** See how far your group is on shared quests (a small count by each quest, or a row per member).
+  Works between players who run JTS Quest Tracker; only quest IDs and counts are sent, nothing in chat.
+- **Announce to Party.** Your group sees your objective progress in chat, even if they don't use the addon.
+- **Share All Quests**, or one zone's, from the header menus. Dungeon and raid headers get a Share all button.
+- **Dungeon Quests Only / Raid Quests Only.** Inside an instance, see just the quests for it.
+
+### Your tracker, your way
+- **Sort** by level, completion, recently updated, distance, or **drag quests into your own order**.
+- **Zone headers** you can fold (your zone first), **pinned quests**, Expand Current Zone Only, and ready-to-turn-in
+  quests first, last or in **their own section**.
+- **Turned in today:** an optional list of the quests you handed in today.
+- **Move it** by dragging, from **Edit Mode**, or with exact sliders. **Grow upwards** for trackers near the bottom of
+  the screen, with the header kept in view while you scroll.
+- **Visibility:** fade or hide it in combat, hide it in dungeons, raids or PvP, collapse it in instances, or **fade it
+  when idle** until you point at it.
+- **Color Blind Mode** for all nine types of colour blindness, plus optional difficulty markers (`!!` `!` `-` `--`) so
+  colour is never the only signal.
+- **Profiles** shared across characters, with one-line **import / export** to back up or share your setup.
+- **Searchable settings**, a **minimap button**, a key binding and `/jtsqt` commands.
+- A **welcome screen** walks you through the features, and after each update shows just what's new.
+- **Safe startup:** if the tracker ever fails to start, you get Blizzard's tracker back instead of none.
 
 ## Installing
 
-1. Copy the `JTS_QuestTracker` folder into `Interface/AddOns`. The folder name must be exactly `JTS_QuestTracker`.
-2. Start the game. If the addon is marked "out of date" after a patch, tick **Load out of date AddOns**.
+1. Download the latest zip from [Releases](https://github.com/jamesthespud/JTS_Quest_Tracker/releases) (or use
+   CurseForge or Wago).
+2. Unzip it into your `Interface/AddOns` folder. The folder must be named exactly `JTS_QuestTracker`.
+3. Start the game. If it's marked "out of date" after a patch, tick **Load out of date AddOns**.
 
-JTS Quest Tracker has its own settings and does not touch Butter Quest Tracker's. Run only one quest tracker at a
-time: if Butter Quest Tracker is also installed, disable it in the AddOn list.
+Everything it needs (Ace3) is included. Run one quest tracker at a time: if Butter Quest Tracker is also installed,
+disable it. JTS Quest Tracker has its own settings and doesn't touch Butter Quest Tracker's.
 
-All libraries (Ace3) are bundled, nothing else needs installing.
+**WoW Forever only** for now; other WoW clients aren't supported yet.
 
 ## Using it
 
 | Action | What it does |
 | --- | --- |
-| `/jtsqt` | Open the settings (also in Esc > Options > AddOns) |
-| `/jtsqt welcome` | Open the welcome screen (a quick tour of features to turn on or off) |
+| `/jtsqt` | Open the settings (also Esc > Options > AddOns, or the minimap button) |
+| `/jtsqt welcome` | Open the welcome screen |
 | `/jtsqt toggle` | Show or hide the tracker (also `show`, `hide`, or the key binding) |
-| `/jtsqt collapse` / `/jtsqt expand` | Collapse or expand every zone |
+| `/jtsqt collapse` / `/jtsqt expand` | Fold or open every zone |
 | `/jtsqt share` | Share all your quests with your group |
 | `/jtsqt cleanup` | Abandon your grey and failed quests (lists them and asks first) |
 | `/jtsqt minimap` | Show or hide the minimap button |
 | `/jtsqt status` | Print which game APIs were found (include this in bug reports) |
 | `/jtsqt reset` | Clear your manual track and untrack choices |
-| Left-click the header | Collapse or expand the tracker |
-| Right-click the header | Menu: Collapse All, Expand All, Share All Quests, Hide Tracker, Settings |
-| Right-click a zone header | Menu: Share This Zone's Quests, Collapse All, Expand All |
+| Click the header | Fold or open the tracker |
+| Right-click the header | Collapse All, Expand All, Share All Quests, Clean Up Quest Log, Hide, Settings |
+| Click a zone header | Fold or open that zone (right-click: share its quests, collapse or expand all) |
 | Click a quest | Open it in the quest log |
-| Shift-click / Alt-click / Ctrl-click a quest | Untrack / Wowhead link / link in chat |
-| Middle-click a quest | Focus it: WoW's quest arrow and map waypoint point to it (click again to stop) |
-| Right-click a quest | Quest menu (focus, pin, view, share, abandon) |
+| Middle-click a quest | Focus it: WoW's quest arrow and map waypoint point to it |
+| Shift / Alt / Ctrl-click a quest | Untrack / Wowhead link / link in chat |
+| Right-click a quest | Focus, pin, add a note, view, share, TomTom waypoint, abandon |
+
+### Where the settings are
+
+| Page | What's there |
+| --- | --- |
+| **Search** | Type part of a setting's name and press Enter |
+| **General** | Skin and its options, preview, minimap button, welcome screen |
+| **Tracking** | Sorting, zone order, ready-to-turn-in placement, filters, dungeon and raid quests only |
+| **Questing** | Quest focus, quest item buttons and hotkey, auto quest, quest objects and nameplate icons, the world map, TomTom and Masque |
+| **Appearance** | Text, Color Blind Mode, tracker header, XP bar, zone headers, quest names, objectives |
+| **Alerts & Group** | Objective complete flash, chat and sounds, Announce to Party, party progress |
+| **Window** | Position, size, scale, Edit Mode, visibility and fading, background, scrolling |
+| **Profiles** | Switch, copy and reset profiles; import and export |
+| **Advanced** | Language, developer tools, reset everything |
+
+## Good to know
+
+- For now the world map opens **without its quest log panel**: with the tracker running, the zones in the map's
+  quest log won't fold. The arrow at the bottom of the map still opens it, or turn this off in Questing > World Map.
+- The game doesn't let addons move secure buttons in combat, so changes to quest item buttons made in a fight show up
+  when it ends.
 
 ## Reporting bugs
 
-Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Quest Tracker's author) and include:
+Please report problems on the JTS Quest Tracker [issues page](https://github.com/jamesthespud/JTS_Quest_Tracker/issues)
+or its CurseForge page (not to Butter Quest Tracker's author), and include:
 
 - the output of `/jtsqt status`
 - the full text of any Lua error (BugSack / BugGrabber capture these)
@@ -119,11 +142,14 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
 
 ## For developers
 
-- New patch marks the addon out of date: add the interface number to the first line of `JTS_QuestTracker.toc`
-  (`/dump (select(4, GetBuildInfo()))` in game).
-- A quest, map or UI function is renamed or removed: fix it in `Compat/Compat.lua`. Every Blizzard quest, map and
-  UI call goes through that file, wrapped so one missing function can't break the rest.
-- New features go in their own files (`Extras.lua`, `ColorBlind.lua`, `Tags.lua`, `Media.lua`, `Profiles.lua`, `QuestItems.lua`, `Minimap.lua`, `Focus.lua`, `Visibility.lua`, `Headers.lua`, `Timers.lua`, `Distance.lua`, `Rewards.lua`, `PartyProgress.lua`, `Welcome.lua`, `StickyHeader.lua`, `ForeverQuests.lua`, `Skin.lua`, `Highlights.lua`, `Nameplates.lua`, `XPBar.lua`, `QuestItemKey.lua`) so the core tracker stays as close to the original design as possible.
+- A new patch marks the addon out of date: add the interface number to the `## Interface` line of
+  `JTS_QuestTracker.toc` (`/dump (select(4, GetBuildInfo()))` in game).
+- A quest, map or UI function is renamed or removed: fix it in `Compat/Compat.lua`. Every Blizzard quest, map and UI
+  call goes through that file, wrapped so one missing function can't break the rest.
+- Features live in their own files (`Skin.lua`, `XPBar.lua`, `QuestItems.lua`, `Visibility.lua`, `EditMode.lua`,
+  `TurnedInToday.lua`, and so on) and hook into the core, so `JTS_QuestTracker.lua` stays close to the original design.
+  Settings are built in `Options.lua`; each feature file provides its own options for it to place.
+- Pooled rows are reused: anything a feature adds to a row is reset in that row's `OnAcquire`.
 - All internal libraries are registered under `JTSQT*` names and all globals start with `JTS_QuestTracker`, so this
   addon can be installed next to Butter Quest Tracker without the two overwriting each other.
 
@@ -134,8 +160,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   Waltrapalo's fork: the Minimal skin, Ready to Turn In > Own Section (finished quests in a foldable section above the
   zones), Turned In Today (off by default), moving and resizing the tracker from WoW's Edit Mode, and TomTom waypoints
   that use Questie's location when WoW has none.
-- **2.1.0** Tracker Scale slider (Frame Settings > Position & Size). Fade When Idle: the tracker fades while your
-  mouse isn't over it (Frame Settings > Visibility, off by default). Rested XP shows as a faint band on the XP bar, and
+- **2.1.0** Tracker Scale slider (Window > Position & Size). Fade When Idle: the tracker fades while your
+  mouse isn't over it (Window > Visibility, off by default). Rested XP shows as a faint band on the XP bar, and
   hovering the header shows this session's quests turned in, XP gained, XP per hour and time to level.
 - **2.0.6** Modern skin: quest names and objectives follow your colour settings (colour by difficulty, your own
   quest name and objective colours, colour by progress), like Classic. Long quest names that wrap onto a second line no longer
@@ -162,6 +188,10 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   quest objects, and puts your own settings back when turned off. Quest item buttons glow and sparkle when your
   target is in range. Quest icons on the nameplates of enemies you still need. (The 2.0 test builds were called
   3.0.0-alpha1 to alpha14.)
+
+<details>
+<summary>1.x versions</summary>
+
 - **1.5.0** Quest notes: right-click a quest > Add Note; shown in the tooltip with a note icon on the quest, cleared on
   turn-in. Clean Up Quest Log: abandon grey and failed quests in one go from the tracker header menu or
   `/jtsqt cleanup` (asks first, keeps pinned quests and grey quests that are ready to turn in).
@@ -213,6 +243,8 @@ Please report problems on the JTS Quest Tracker CurseForge page (not to Butter Q
   separate objective and quest complete sounds, a minimap button, profiles and import / export, and new defaults
   (quest level before the name, color by difficulty, progress bars, outlined text). Support for other WoW clients was
   removed to keep the code small. Earlier version numbers were test builds.
+
+</details>
 
 ## Credits and license
 
