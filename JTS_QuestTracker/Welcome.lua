@@ -311,7 +311,7 @@ local FEATURES = {
 
 -- Extra lines for the "New in" page, per version (things without an on/off switch).
 local NEW_NOTES = {
-    ["2.2.0"] = "|cffffd100Also new:|r the settings have a |cffffffffSearch|r page and a tidier layout (General, Tracking, Questing, Appearance, Alerts & Group, Window)  ·  TomTom waypoints use Questie's location when WoW has none  ·  Thanks to Waltrapalo for the ideas",
+    ["2.2.0"] = "|cffffd100Also new:|r the settings have a |cffffffffSearch|r page and a tidier layout (General, Tracking, Questing, Appearance, Alerts & Group, Window)  ·  TomTom waypoints use Questie's location when WoW has none",
     ["2.1.0"] = "|cffffd100Also new:|r a Tracker Scale slider (Window > Position & Size)  ·  rested XP shows as a faint band on the XP bar  ·  hover the header for this session's quests, XP per hour and time to level",
     ["2.0.6"] = "|cffffd100Also new:|r in the Modern skin, objectives follow your objective colour and Colour by Progress (Appearance > Objectives)",
     ["2.0.5"] = "|cffffd100Also new:|r more room above and below quest names so they aren't cut off (Appearance > Quest Names > Space Around Quest Names; 0 is the old look)",
@@ -476,7 +476,11 @@ local function build()
 
     local version = text(frame, 12, { r = 0.6, g = 0.6, b = 0.6 });
     version:SetPoint("TOPLEFT", heading, "BOTTOMLEFT", 0, -3);
-    version:SetText("Version " .. tostring(ns.CONSTANTS.VERSION) .. "  ·  a quick tour of what you can turn on or off. You can change all of it later in the settings.");
+    -- Kept clear of the close button, and allowed a second line rather than running off the edge.
+    version:SetPoint("RIGHT", frame, "RIGHT", -40, 0);
+    version:SetWordWrap(true);
+    version:SetMaxLines(2);
+    version:SetText("Version " .. tostring(ns.CONSTANTS.VERSION) .. "  ·  a quick tour of what you can turn on or off. Change any of it later in the settings.");
 
     -- Pages: extra sections first (the skin picker), then one per feature section.
     -- `tour` is the full walk-through; `pages` is what is showing (the tour, or the "New in" page).
@@ -585,7 +589,7 @@ local function build()
     rule:SetPoint("BOTTOMRIGHT", -24, CREDIT_STRIP);
     rule:SetHeight(1);
     rule:SetColorTexture(1, 1, 1, 0.08);
-    credit:SetText("James's own fork of Butter Quest Tracker by Butter Cookie Kitkat (MIT). Not affiliated with the original author.  ·  /jtsqt welcome");
+    credit:SetText("A fork of Butter Quest Tracker by Butter Cookie Kitkat (MIT). Not affiliated with the original author.");
 
     local current = 1;
     local newPage; -- the "New in" page, rebuilt for whatever is new since the last visit
@@ -671,8 +675,31 @@ local function build()
         newPage.isNewPage = true;
         newPage.name = "New in " .. (tostring(ns.CONSTANTS.VERSION):match("^[%d%.]+") or tostring(ns.CONSTANTS.VERSION));
 
+        -- "Also new" lines for each version in the list, under the checkboxes. They wrap to the page
+        -- width, and the window grows to fit them.
+        local rows = math.ceil(#features / columns);
+        local noteVersions, notes = {}, {};
+        for _, feature in ipairs(features) do noteVersions[feature.added] = true end
+        local versionList = {};
+        for version in pairs(noteVersions) do versionList[#versionList + 1] = version end
+        table.sort(versionList, function(a, b) return a > b end); -- newest first
+        for _, version in ipairs(versionList) do
+            if NEW_NOTES[version] then notes[#notes + 1] = NEW_NOTES[version] end
+        end
+
+        local extra, noteHeight = nil, 0;
+        if #notes > 0 then
+            extra = text(newPage, 11, { r = 0.75, g = 0.75, b = 0.75 });
+            extra:SetPoint("TOPLEFT", newPage, "TOPLEFT", 0, -50 - rows * rowHeight - 8);
+            extra:SetWidth(pageWidth);
+            extra:SetJustifyV("TOP");
+            extra:SetSpacing(2);
+            extra:SetText(table.concat(notes, "\n\n"));
+            noteHeight = math.ceil(extra:GetStringHeight() or 0) + 8;
+        end
+
         -- Tall enough for everything new (a long list when someone skipped several versions).
-        local needed = -top + 50 + math.ceil(#features / columns) * rowHeight + 40 + 30 + FOOTER;
+        local needed = -top + 50 + rows * rowHeight + noteHeight + 30 + FOOTER;
         if needed > frame:GetHeight() then
             frame:SetHeight(needed);
             local screenHeight = UIParent and UIParent:GetHeight();
@@ -700,25 +727,10 @@ local function build()
         end);
         newPage.tourButton = tourButton;
 
-        local versions = {};
         for i, feature in ipairs(features) do
             local column = (i - 1) % columns;
             local row = math.floor((i - 1) / columns);
             featureRow(newPage, feature, column * (columnWidth + 28), -50 - row * rowHeight, columnWidth);
-            versions[feature.added] = true;
-        end
-
-        local notes = {};
-        for version in pairs(versions) do
-            if NEW_NOTES[version] then notes[#notes + 1] = NEW_NOTES[version] end
-        end
-        table.sort(notes);
-
-        if #notes > 0 then
-            local extra = text(newPage, 11, { r = 0.75, g = 0.75, b = 0.75 });
-            extra:SetPoint("BOTTOMLEFT", 0, 4);
-            extra:SetWidth(pageWidth);
-            extra:SetText(table.concat(notes, "\n"));
         end
 
         for _, entry in ipairs(checkboxes) do

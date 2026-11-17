@@ -195,6 +195,8 @@ Open an **[issue](https://github.com/jamesthespud/JTS_Quest_Tracker/issues)** (o
 <details>
 <summary><b>Show all versions</b></summary>
 
+- **2.2.1** Welcome screen: the line under the title and the credit line fit inside the window again, and the
+  "Also new" notes on the New page wrap under the checkboxes instead of running over them.
 - **2.2.0** Settings search: a Search page at the top finds any setting by name. The settings are regrouped into
   General, Tracking, Questing, Appearance, Alerts & Group, Window, Profiles and Advanced. New, from ideas in
   Waltrapalo's fork: the Minimal skin, Ready to Turn In > Own Section (finished quests in a foldable section above the
