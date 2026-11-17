@@ -432,7 +432,7 @@ JQT:OnSettingsApplied(function(self)
 end);
 
 -- ---------------------------------------------------------------------------
--- Options (the Buttons tab, shared with the minimap button)
+-- Options (groups placed by Options.lua: Questing and General)
 -- ---------------------------------------------------------------------------
 
 JQT.buttonsTabGroups = JQT.buttonsTabGroups or {};
@@ -518,18 +518,5 @@ JQT.buttonsTabGroups.questItems = function()
     };
 end
 
-JQT:AddOptionsTab("buttons", function()
-    local tab = {
-        name = "Buttons",
-        type = "group",
-        order = 900,
-        args = {}
-    };
+-- These groups are placed by Options.lua (Questing and General).
 
-    for key, builder in pairs(JQT.buttonsTabGroups) do
-        local ok, group = pcall(builder);
-        if ok and group then tab.args[key] = group end
-    end
-
-    return tab;
-end);

@@ -149,7 +149,7 @@ QLH:OnQuestUpdated(function(updates)
 end);
 
 -- ---------------------------------------------------------------------------
--- Options (in Filters & Sorting)
+-- Options (Questing)
 -- ---------------------------------------------------------------------------
 
 JQT.focusOptions = function()

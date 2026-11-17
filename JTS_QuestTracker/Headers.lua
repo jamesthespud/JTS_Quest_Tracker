@@ -38,6 +38,10 @@ local function questZones()
         if quest.zone then zones[quest.zone] = true end
     end
 
+    -- The Ready to Turn In and Turned In Today sections fold with the zones.
+    if JQT.GetQuestSection then zones["\001ready"] = true end
+    if JQT.TODAY_SECTION then zones[JQT.TODAY_SECTION] = true end
+
     return zones;
 end
 
@@ -80,7 +84,10 @@ function JQT:ExpandCurrentZoneOnly(force)
     local c, changed = collapsed(), false;
 
     for questZone in pairs(questZones()) do
+        -- The Ready to Turn In and Turned In Today sections aren't places: leave them as they are.
+        local special = questZone:sub(1, 1) == "\001";
         local fold = (questZone ~= zone and questZone ~= minimapZone) or nil;
+        if special then fold = c["Z-" .. questZone] end
 
         if c["Z-" .. questZone] ~= fold then
             c["Z-" .. questZone] = fold;

@@ -125,6 +125,7 @@ local function pointedAt(self)
     if not tracker or not tracker:IsShown() then return true end
 
     -- Moving it, or it's unlocked: keep it fully visible.
+    if self.inEditMode then return true end
     if not self:IsTrackerLocked() then return true end
     if tracker.IsMouseOver and tracker:IsMouseOver() then return true end
 
@@ -311,7 +312,7 @@ JQT:OnSettingsApplied(function(self)
 end);
 
 -- ---------------------------------------------------------------------------
--- Options (Frame Settings > Visibility)
+-- Options (Window > Visibility)
 -- ---------------------------------------------------------------------------
 
 local function set(info, value)
@@ -319,7 +320,7 @@ local function set(info, value)
     JQT:UpdateVisibility();
 end
 
--- Filters & Sorting > Filters
+-- Tracking > Filters
 local function instanceFilterOption(name, arg, desc)
     return {
         name = name, desc = desc, type = "toggle", arg = arg, width = 1.6,
@@ -398,11 +399,6 @@ JQT.visibilityOptions = function()
             },
         }
     };
-
-    -- Hide the Map's Quest Log (MapQuestLog.lua).
-    if JQT.mapQuestLogOptions then
-        for key, option in pairs(JQT.mapQuestLogOptions()) do group.args[key] = option end
-    end
 
     return group;
 end

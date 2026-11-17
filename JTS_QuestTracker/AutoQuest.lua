@@ -154,7 +154,7 @@ events:SetScript("OnEvent", function(_, event)
 end);
 
 -- ---------------------------------------------------------------------------
--- Options (Filters & Sorting > Auto Quest)
+-- Options (Questing > Auto Quest)
 -- ---------------------------------------------------------------------------
 
 JQT.autoQuestOptions = function()

@@ -518,7 +518,7 @@ QLH:OnQuestUpdated(function(updates)
 end);
 
 -- ---------------------------------------------------------------------------
--- Option (Alerts > Group)
+-- Option (Alerts & Group > Your Group)
 -- ---------------------------------------------------------------------------
 
 JQT.partyProgressDisplayOptions = function()

@@ -116,7 +116,7 @@ hooksecurefunc(JQT, "Initialize", function(self)
 end);
 
 -- ---------------------------------------------------------------------------
--- Option (Alerts > Quest Objects)
+-- Option (Questing > Quest Objects)
 -- ---------------------------------------------------------------------------
 
 JQT.highlightOptions = function()

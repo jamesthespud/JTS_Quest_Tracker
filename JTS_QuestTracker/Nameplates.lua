@@ -133,7 +133,7 @@ QLH:OnQuestUpdated(function()
 end);
 
 -- ---------------------------------------------------------------------------
--- Option (Alerts > Quest Objects)
+-- Option (Questing > Quest Objects)
 -- ---------------------------------------------------------------------------
 
 JQT.nameplateOptions = function()

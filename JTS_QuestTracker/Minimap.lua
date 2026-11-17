@@ -199,7 +199,7 @@ JQT:OnSettingsApplied(function(self)
 end);
 
 -- ---------------------------------------------------------------------------
--- Options (in the Buttons tab)
+-- Options (General)
 -- ---------------------------------------------------------------------------
 
 JQT.buttonsTabGroups = JQT.buttonsTabGroups or {};

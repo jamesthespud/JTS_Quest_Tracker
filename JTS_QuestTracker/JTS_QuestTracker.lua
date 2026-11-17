@@ -299,6 +299,37 @@ local function compareBy(quest, otherQuest, field, comparator)
     return value < otherValue;
 end
 
+-- ---------------------------------------------------------------------------
+-- Ready to Turn In: Own Section (2.2, idea from Waltrapalo's fork). Finished quests get their own
+-- foldable section above the zones. It is drawn as a zone with a reserved name.
+-- ---------------------------------------------------------------------------
+
+local READY_SECTION = "\001ready";
+local TODAY_SECTION = "\001today"; -- Turned In Today (TurnedInToday.lua), always last
+JQT.TODAY_SECTION = TODAY_SECTION;
+
+function JQT:UsesReadySection()
+    local p = self.db.profile;
+    return p.TurnInPlacement == "Section" and p.ZoneHeaderEnabled;
+end
+
+function JQT:IsReadySection(zone)
+    return zone == READY_SECTION;
+end
+
+-- Which section a quest is drawn in: the ready section or its own zone.
+function JQT:GetQuestSection(quest)
+    if quest.completed and not quest.failed and self:UsesReadySection() then return READY_SECTION end
+    return quest.zone;
+end
+
+-- What a zone header says.
+function JQT:GetZoneLabel(zone)
+    if zone == READY_SECTION then return JQTL:GetString('QT_READY_TO_TURN_IN') end
+    if zone == TODAY_SECTION then return "Turned in today" end
+    return zone;
+end
+
 local function sortQuests(quest, otherQuest)
     -- Pinned quests always come first (within their zone when zone headers are on).
     local pinned, otherPinned = JQT:IsPinned(quest.questID), JQT:IsPinned(otherQuest.questID);
@@ -306,6 +337,7 @@ local function sortQuests(quest, otherQuest)
 
     -- Ready to Turn In quests can go first or last (after pinned quests).
     local placement = JQT.db.profile.TurnInPlacement;
+    if placement == "Section" then placement = "Top" end -- without zone headers there's no section: first
     if (placement == "Top" or placement == "Bottom") and (quest.completed and true) ~= (otherQuest.completed and true) then
         if placement == "Top" then return quest.completed == true end
 
@@ -386,7 +418,7 @@ function JQT:Sort()
     for i, questID in pairs(keys) do
         questOrder[questID] = i;
 
-        local zone = quests[questID].zone;
+        local zone = self:GetQuestSection(quests[questID]);
         if zone then
             zoneOrder[zone] = zoneOrder[zone] or i;
         end
@@ -401,6 +433,9 @@ function JQT:Sort()
         local function isCurrent(zone) return zone == currentZone or zone == minimapZone end
 
         table.sort(zones, function(a, b)
+            -- The ready section always comes first.
+            if (a == READY_SECTION) ~= (b == READY_SECTION) then return a == READY_SECTION end
+
             local aCurrent, bCurrent = isCurrent(a), isCurrent(b);
             if aCurrent ~= bCurrent then return aCurrent end
 
@@ -412,7 +447,10 @@ function JQT:Sort()
 
         zoneOrder = {};
         for rank, zone in ipairs(zones) do zoneOrder[zone] = rank end
+    elseif zoneOrder[READY_SECTION] then
+        zoneOrder[READY_SECTION] = -1; -- first, whatever the quest order
     end
+    zoneOrder[TODAY_SECTION] = 1e9; -- last
 
     for _, element in pairs(self.questContainers) do
         element:SetOrder(questOrder[element.metadata.quest.questID]);
@@ -751,11 +789,14 @@ end
 -- A zone header (click to collapse) and the container its quests go in.
 function JQT:AddZone(zone, questsInZone)
     local p = self.db.profile;
-    local zoneContainer;
+    local zoneContainer, font;
+    local label = self:GetZoneLabel(zone);
+    local ready = zone == READY_SECTION;
+    local special = ready or zone == TODAY_SECTION;
 
-    self.tracker:Font({
-        label = p.ZoneHeaderQuestCount and (zone .. " (" .. questsInZone .. ")") or zone,
-        color = p.ZoneHeaderFontColor,
+    font = self.tracker:Font({
+        label = p.ZoneHeaderQuestCount and (label .. " (" .. questsInZone .. ")") or label,
+        color = ready and self:GetStatusColor("complete") or p.ZoneHeaderFontColor,
         size = p.ZoneHeaderFontSize,
         container = self.tracker:Container({
             container = self.questsContainer,
@@ -764,11 +805,12 @@ function JQT:AddZone(zone, questsInZone)
             events = {
                 OnMouseUp = function(button)
                     if button == "RightButton" and self.ShowZoneMenu then
-                        self:ShowZoneMenu(zone);
+                        if not special then self:ShowZoneMenu(zone) end
                         return;
                     end
 
                     collapsed()["Z-" .. zone] = zoneContainer:ToggleHidden() or nil;
+                    if self.OnZoneToggled then self:OnZoneToggled(zone, font) end
                     playSound("IG_MAINMENU_OPTION_CHECKBOX_ON");
                 end
             }
@@ -844,7 +886,10 @@ function JQT:AddQuest(quest, parent)
             line(quest.summary, p.ObjectiveFontColor);
         end
     elseif quest.completed then
-        line(JQTL:GetString('QT_READY_TO_TURN_IN'), self:GetStatusColor("complete"));
+        -- In the ready section its header already says so.
+        if self:GetQuestSection(quest) ~= READY_SECTION then
+            line(JQTL:GetString('QT_READY_TO_TURN_IN'), self:GetStatusColor("complete"));
+        end
     elseif quest.failed then
         line(JQTL:GetString('QT_FAILED'), self:GetStatusColor("failed"));
     else
@@ -901,15 +946,17 @@ function JQT:RefreshView()
 
     local zoneContainers, questsPerZone = {}, {};
     for _, quest in pairs(watchedQuests) do
-        questsPerZone[quest.zone] = (questsPerZone[quest.zone] or 0) + 1;
+        local section = self:GetQuestSection(quest);
+        questsPerZone[section] = (questsPerZone[section] or 0) + 1;
     end
 
     for _, quest in pairs(watchedQuests) do
         local parent = self.questsContainer;
 
         if p.ZoneHeaderEnabled then
-            zoneContainers[quest.zone] = zoneContainers[quest.zone] or self:AddZone(quest.zone, questsPerZone[quest.zone]);
-            parent = zoneContainers[quest.zone];
+            local section = self:GetQuestSection(quest);
+            zoneContainers[section] = zoneContainers[section] or self:AddZone(section, questsPerZone[section]);
+            parent = zoneContainers[section];
         end
 
         self:AddQuest(quest, parent);

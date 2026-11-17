@@ -190,6 +190,39 @@ local function Category(name, order, args)
     return { name = name, type = "group", order = order, args = args };
 end
 
+-- A whole group built in another file (a function on JQT, or one in JQT.buttonsTabGroups), placed
+-- here in order. Missing files are skipped.
+local function Built(builder)
+    if type(builder) ~= "function" then return nil end
+
+    local ok, group = pcall(builder);
+    if not ok or type(group) ~= "table" then return nil end
+
+    group.inline = true;
+    return O(group);
+end
+
+local function ButtonsGroup(key)
+    return Built(JQT.buttonsTabGroups and JQT.buttonsTabGroups[key]);
+end
+
+-- ---------------------------------------------------------------------------
+-- General: the look, the minimap button and the welcome screen
+-- ---------------------------------------------------------------------------
+
+local function generalCategory()
+    return Category("General", 1, {
+        skinGroup = Group("Look", Extra("skinOptions"), {
+            displayDummyData = O{ name = L('SETTINGS_DISPLAY_DUMMY_DATA_NAME'), desc = L('SETTINGS_DISPLAY_DUMMY_DATA_DESC'),
+                arg = "DisplayDummyData", type = "toggle", width = "full", set = SetAndRefreshView },
+        }),
+
+        minimapGroup = ButtonsGroup("minimap"),
+
+        welcomeGroup = JQT.welcomeOptions and Group("Welcome Screen", {}, Extra("welcomeOptions")) or nil,
+    });
+end
+
 -- ---------------------------------------------------------------------------
 -- Tracking: what is shown and in which order
 -- ---------------------------------------------------------------------------
@@ -197,7 +230,7 @@ end
 local function trackingCategory()
     local sortValues, sortOrder = Choices(sortingChoices);
 
-    return Category(L('SETTINGS_FILTERS_AND_SORTING_TAB'), 1, {
+    return Category("Tracking", 2, {
         sortingGroup = Group("Sorting", {
             sorting = O{ name = L('SETTINGS_SORTING_NAME'), desc = L('SETTINGS_SORTING_DESC'), arg = "Sorting", type = "select",
                 values = sortValues, sorting = sortOrder,
@@ -212,34 +245,17 @@ local function trackingCategory()
                 values = { CurrentThenAlphabetical = "Current zone first, then A-Z", ByQuestOrder = "By quest order" },
                 set = SetAndRefreshView, disabled = Off("ZoneHeaderEnabled") },
             turnInPlacement = O{ name = "Ready to Turn In",
-                desc = "Where quests that are ready to turn in go.\n\n|cffffffffSorted|r: wherever your sorting puts them.\n|cffffffffFirst|r: at the top (of their zone, with zone headers on).\n|cffffffffLast|r: at the bottom.\n\nPinned quests always come first.",
+                desc = "Where quests that are ready to turn in go.\n\n|cffffffffSorted|r: wherever your sorting puts them.\n|cffffffffFirst|r: at the top (of their zone, with zone headers on).\n|cffffffffLast|r: at the bottom.\n|cffffffffOwn Section|r: together in a foldable \"Ready to turn in\" section above the zones (needs zone headers; without them it works like First).\n\nPinned quests always come first.",
                 arg = "TurnInPlacement", type = "select", width = 1.0,
-                values = { Normal = "Sorted", Top = "First", Bottom = "Last" }, sorting = { "Normal", "Top", "Bottom" },
-                set = function(info, value) SetInDB(info, value); JQT:Sort(); end },
+                values = { Normal = "Sorted", Top = "First", Bottom = "Last", Section = "Own Section" },
+                sorting = { "Normal", "Top", "Bottom", "Section" },
+                set = SetAndRefreshView },
             resetManualOrder = O{ name = "Reset Manual Order",
                 desc = "Forgets the order you dragged your quests into.",
                 type = "execute", width = 1.0,
                 hidden = function() return JQT.db.profile.Sorting ~= "ByManual" end,
                 func = function() if JQT.ResetManualOrder then JQT:ResetManualOrder() end end },
-            spacer1 = Spacer(),
-            autoHideQuestHelperIcons = O{ name = L('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_NAME'),
-                desc = function() return JQTL:GetString('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_DESC', table.concat(QH:GetActiveAddons(), ", ")) end,
-                arg = "AutoHideQuestHelperIcons", type = "toggle", width = 1.6,
-                disabled = function() return not QH:IsSupported() end,
-                set = function(info, value) SetInDB(info, value); QH:SetAutoHideQuestHelperIcons(value); end },
         }),
-
-        focusGroup = JQT.focusOptions and (function()
-            local group = JQT.focusOptions();
-            group.order = 1000000; -- after Sorting and Filters
-            return group;
-        end)() or nil,
-
-        autoQuestGroup = JQT.autoQuestOptions and (function()
-            local group = JQT.autoQuestOptions();
-            group.order = 1000001; -- after Focus
-            return group;
-        end)() or nil,
 
         filtersGroup = Group("Filters", {
             autoTrackUpdatedQuests = O{ name = L('SETTINGS_AUTO_TRACK_UPDATED_QUESTS_NAME'), desc = L('SETTINGS_AUTO_TRACK_UPDATED_QUESTS_DESC'),
@@ -257,6 +273,11 @@ local function trackingCategory()
                 arg = "HideCompletedQuests", type = "toggle", width = 1.6, disabled = On("DisableFilters"), set = SetAndRefreshQuestWatch },
             dungeonQuestsOnly = JQT.dungeonFilterOptions and O(JQT.dungeonFilterOptions()) or nil,
             raidQuestsOnly = JQT.raidFilterOptions and O(JQT.raidFilterOptions()) or nil,
+            autoHideQuestHelperIcons = O{ name = L('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_NAME'),
+                desc = function() return JQTL:GetString('SETTINGS_AUTO_HIDE_QUEST_HELPER_ICONS_DESC', table.concat(QH:GetActiveAddons(), ", ")) end,
+                arg = "AutoHideQuestHelperIcons", type = "toggle", width = 1.6,
+                disabled = function() return not QH:IsSupported() end,
+                set = function(info, value) SetInDB(info, value); QH:SetAutoHideQuestHelperIcons(value); end },
             spacer1 = Spacer(),
             reset = O{ name = L('SETTINGS_RESET_TRACKING_OVERRIDES_NAME'), desc = L('SETTINGS_RESET_TRACKING_OVERRIDES_DESC'),
                 type = "execute", width = 1.3, func = function() JQT:ResetOverrides() end },
@@ -265,20 +286,38 @@ local function trackingCategory()
 end
 
 -- ---------------------------------------------------------------------------
--- Appearance: text, headers, quest names and objectives
+-- Questing: help while you quest (focus, item buttons, auto quest, highlights, other addons)
+-- ---------------------------------------------------------------------------
+
+local function questingCategory()
+    return Category("Questing", 3, {
+        focusGroup = Built(JQT.focusOptions),
+        questItemsGroup = ButtonsGroup("questItems"),
+        itemKeyGroup = ButtonsGroup("itemKey"),
+        autoQuestGroup = Built(JQT.autoQuestOptions),
+
+        questObjectsGroup = JQT.highlightOptions and (function()
+            local group = Built(JQT.highlightOptions);
+            if group and JQT.nameplateOptions then group.args.nameplates = JQT.nameplateOptions() end
+            return group;
+        end)() or nil,
+
+        worldMapGroup = JQT.mapQuestLogOptions and Group("World Map", {}, Extra("mapQuestLogOptions")) or nil,
+
+        integrationsGroup = ButtonsGroup("integrations"),
+    });
+end
+
+-- ---------------------------------------------------------------------------
+-- Appearance: text, colours, headers, quest names and objectives
 -- ---------------------------------------------------------------------------
 
 local function appearanceCategory()
     local fontValues, fontOrder = Choices(function() return JQT:GetFontChoices() end);
 
-    return Category("Appearance", 2, {
-        skinGroup = JQT.skinOptions and Group("Skin", {}, Extra("skinOptions")) or nil,
+    local cbValues, cbOrder = Choices(function() return JQT:GetColorBlindModeValues() end);
 
-        previewGroup = Group("Preview", {
-            displayDummyData = O{ name = L('SETTINGS_DISPLAY_DUMMY_DATA_NAME'), desc = L('SETTINGS_DISPLAY_DUMMY_DATA_DESC'),
-                arg = "DisplayDummyData", type = "toggle", width = "full", set = SetAndRefreshView },
-        }),
-
+    return Category("Appearance", 4, {
         textStyleSettings = Group("Text", {
             fontFace = O{ name = "Font",
                 desc = "The font used for all tracker text: the game's own fonts, nine fonts that come with the tracker (Barlow, Fira Sans, PT Sans, Ubuntu, Oswald, Titillium, Rajdhani, Alegreya Sans SC and Cinzel), and any font from SharedMedia or an addon that shares fonts with it (like Expressway from ElvUI).",
@@ -291,6 +330,16 @@ local function appearanceCategory()
             textShadow = O{ name = "Shadow", desc = "\"Default\" keeps the game's own text shadow.",
                 arg = "TextShadow", type = "select", width = 1.2,
                 values = { Default = "Default", Strong = "Strong", Off = "Off" }, set = SetAndRefreshView },
+        }),
+
+        colorBlindSettings = Group("Color Blind Mode", {
+            colorBlindMode = O{ name = "Color Blind Mode",
+                desc = "Swaps every color the tracker uses to show meaning (quest difficulty, objective progress, progress bars, Ready to Turn In, Failed and the complete flash) for colors that stay easy to tell apart with your type of color vision. Your own text colors are not changed.\n\nIf you use the game's own color blind filter, use that or this mode, not both.",
+                arg = "ColorBlindMode", type = "select", width = 2.3, values = cbValues, sorting = cbOrder, set = SetAndRefreshView },
+            difficultyMarkers = O{ name = "Difficulty Markers",
+                desc = "Adds a mark after each quest name so you can see its difficulty without relying on color:\n\n|cffffffff!!|r  very hard\n|cffffffff!|r  hard\n(nothing)  normal\n|cffffffff-|r  easy\n|cffffffff--|r  too easy\n\n|cffffffffAuto|r turns them on for the no-color modes (Achromatopsia, Blue Cone Monochromacy, Achromatomaly).",
+                arg = "DifficultyMarkers", type = "select", width = 1.2,
+                values = { Auto = "Auto", On = "On", Off = "Off" }, sorting = { "Auto", "On", "Off" }, set = SetAndRefreshView },
         }),
 
         trackerHeaderSettings = Group("Tracker Header", {
@@ -313,7 +362,9 @@ local function appearanceCategory()
             spacer3 = Spacer(1.1),
             fontColor = FontColor("TrackerHeaderFontColor", Off("TrackerHeaderEnabled")),
             spacer4 = Spacer(),
-        }, Extra("logWarningOptions", "turnInOptions", "xpBarOptions", "stickyHeaderOptions")),
+        }, Extra("logWarningOptions", "turnInOptions", "stickyHeaderOptions")),
+
+        xpBarGroup = JQT.xpBarOptions and Group("XP Bar", {}, Extra("xpBarOptions")) or nil,
 
         zoneHeaderSettings = Group("Zone Headers", {
             enabled = O{ name = L('SETTINGS_ENABLED_NAME'), desc = L('SETTINGS_ZONE_HEADER_ENABLED_DESC'),
@@ -326,7 +377,7 @@ local function appearanceCategory()
             spacer3 = Spacer(1.1),
             fontColor = FontColor("ZoneHeaderFontColor", Off("ZoneHeaderEnabled")),
             spacer4 = Spacer(),
-        }, Extra("zoneOptions")),
+        }, Extra("zoneOptions", "turnedInTodayOptions")),
 
         questHeaderSettings = Group("Quest Names", {
             format = O{ name = L('SETTINGS_FORMAT_NAME'), desc = L('SETTINGS_QUEST_HEADER_FORMAT_DESC'),
@@ -380,31 +431,11 @@ local function appearanceCategory()
 end
 
 -- ---------------------------------------------------------------------------
--- Color blind mode
--- ---------------------------------------------------------------------------
-
-local function colorBlindCategory()
-    local cbValues, cbOrder = Choices(function() return JQT:GetColorBlindModeValues() end);
-
-    return Category("Color Blind Mode", 3, {
-        colorBlindSettings = Group("Color Blind Mode", {
-            colorBlindMode = O{ name = "Color Blind Mode",
-                desc = "Swaps every color the tracker uses to show meaning (quest difficulty, objective progress, progress bars, Ready to Turn In, Failed and the complete flash) for colors that stay easy to tell apart with your type of color vision. Your own text colors are not changed.\n\nIf you use the game's own color blind filter, use that or this mode, not both.",
-                arg = "ColorBlindMode", type = "select", width = 2.3, values = cbValues, sorting = cbOrder, set = SetAndRefreshView },
-            difficultyMarkers = O{ name = "Difficulty Markers",
-                desc = "Adds a mark after each quest name so you can see its difficulty without relying on color:\n\n|cffffffff!!|r  very hard\n|cffffffff!|r  hard\n(nothing)  normal\n|cffffffff-|r  easy\n|cffffffff--|r  too easy\n\n|cffffffffAuto|r turns them on for the no-color modes (Achromatopsia, Blue Cone Monochromacy, Achromatomaly).",
-                arg = "DifficultyMarkers", type = "select", width = 1.2,
-                values = { Auto = "Auto", On = "On", Off = "Off" }, sorting = { "Auto", "On", "Off" }, set = SetAndRefreshView },
-        }),
-    });
-end
-
--- ---------------------------------------------------------------------------
 -- Alerts
 -- ---------------------------------------------------------------------------
 
 local function alertsCategory()
-    return Category("Alerts", 4, {
+    return Category("Alerts & Group", 5, {
         alertSettings = Group("Objective Complete Alert", {
             alertFlash = O{ name = "Flash", desc = "Briefly highlights a quest in the tracker when you finish one of its objectives.",
                 arg = "AlertFlash", type = "toggle", width = 0.8, set = SetInDB },
@@ -426,12 +457,6 @@ local function alertsCategory()
             partyProgress = JQT.partyProgressOptions and O(JQT.partyProgressOptions()) or nil,
             partyProgressDisplay = JQT.partyProgressDisplayOptions and O(JQT.partyProgressDisplayOptions()) or nil,
         }),
-
-        questObjectsGroup = JQT.highlightOptions and (function()
-            local group = O(JQT.highlightOptions());
-            if JQT.nameplateOptions then group.args.nameplates = JQT.nameplateOptions() end
-            return group;
-        end)() or nil,
     });
 end
 
@@ -453,7 +478,7 @@ local function windowCategory()
 
     local defaults = ns.CONSTANTS.DB_DEFAULTS.profile;
 
-    return Category(L('SETTINGS_FRAME_TAB'), 5, {
+    return Category("Window", 6, {
         positionGroup = Group("Position & Size", {
             lockFrame = O{ name = L('SETTINGS_LOCK_FRAME_NAME'), desc = L('SETTINGS_LOCK_FRAME_DESC'),
                 arg = "LockFrame", type = "toggle",
@@ -503,9 +528,10 @@ local function windowCategory()
                     p.Width, p.MaxHeight = defaults.Width, defaults.MaxHeight;
                     JQT.tracker:UpdateSettings({ width = p.Width, maxHeight = p.MaxHeight });
                 end },
-        }),
+            spacer3 = Spacer(),
+        }, Extra("editModeOptions")),
 
-        visibilityGroup = JQT.visibilityOptions and O(JQT.visibilityOptions()) or nil,
+        visibilityGroup = Built(JQT.visibilityOptions),
 
         backgroundGroup = Group("Background", {
             backgroundAlwaysVisible = O{ name = L('SETTINGS_BACKGROUND_ALWAYS_VISIBLE_NAME'), desc = L('SETTINGS_BACKGROUND_ALWAYS_VISIBLE_DESC'),
@@ -545,8 +571,6 @@ end
 
 local function advancedCategory()
     return Category(L('SETTINGS_ADVANCED_TAB'), 2000, {
-        welcomeGroup = JQT.welcomeOptions and Group("Welcome Screen", {}, Extra("welcomeOptions")) or nil,
-
         localeGroup = Group(L('SETTINGS_LOCALE_HEADER'), {
             locale = O{ name = L('SETTINGS_LOCALE_NAME'), type = "select", style = "dropdown",
                 values = { enUS = "English", ruRU = "русский", zhCN = "简体中文" },
@@ -590,6 +614,144 @@ local function advancedCategory()
     });
 end
 
+-- ---------------------------------------------------------------------------
+-- Search (2.2): type a word, and every setting whose name (or its group's name, or its help text)
+-- has it shows up here, working just like it does in its own place.
+-- ---------------------------------------------------------------------------
+
+local searchText = "";
+local MAX_RESULTS = 60;
+
+-- What AceConfig passes down from a group to the settings inside it.
+local INHERITED = { "get", "set", "func", "validate", "confirm", "disabled", "hidden", "handler" };
+
+-- Does `text` have a word starting with `query`? ("xp" finds "XP Bar" but not "Expand".)
+local function hasWord(text, query)
+    return (" " .. text):find("[^%w]" .. query:gsub("%p", "%%%0")) ~= nil;
+end
+
+local function textOf(value)
+    if type(value) == "function" then
+        local ok, result = pcall(value, {});
+        value = ok and result or nil;
+    end
+
+    return type(value) == "string" and value:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):lower() or "";
+end
+
+local function sortedKeys(args)
+    local keys = {};
+    for key in pairs(args or {}) do keys[#keys + 1] = key end
+    table.sort(keys, function(a, b)
+        local oa, ob = tonumber(args[a].order) or 100, tonumber(args[b].order) or 100;
+        if oa ~= ob then return oa < ob end
+        return tostring(a) < tostring(b);
+    end);
+    return keys;
+end
+
+-- A copy of one setting that keeps working away from its group: it takes along what it would
+-- have inherited (getter, setter, disabled, ...).
+local function portable(option, inherited)
+    local copy = {};
+    for key, value in pairs(option) do copy[key] = value end
+    for _, key in ipairs(INHERITED) do
+        if copy[key] == nil and inherited[key] ~= nil then copy[key] = inherited[key] end
+    end
+    return copy;
+end
+
+local function withInherited(inherited, group)
+    local result = {};
+    for _, key in ipairs(INHERITED) do
+        local value = group[key];
+        if value == nil then value = inherited[key] end
+        result[key] = value;
+    end
+    return result;
+end
+
+-- Fills `found` with { path = "Questing > Quest Items", key = option key, option = copy }.
+local function collect(group, query, path, inherited, groupMatches, found)
+    for _, key in ipairs(sortedKeys(group.args)) do
+        if #found >= MAX_RESULTS then return end
+
+        local option = group.args[key];
+        if option.hidden ~= true then
+            if option.type == "group" then
+                local name = textOf(option.name);
+                local childPath = path and (path .. " > " .. (type(option.name) == "string" and option.name or "")) or option.name;
+                collect(option, query, childPath, withInherited(inherited, option),
+                    groupMatches or hasWord(name, query), found);
+            elseif option.type ~= "description" and option.type ~= "header" then
+                if groupMatches or hasWord(textOf(option.name), query) or hasWord(textOf(option.desc), query) then
+                    found[#found + 1] = { path = path or "", key = key, option = portable(option, inherited) };
+                end
+            end
+        end
+    end
+end
+
+local function searchCategory(root, categories)
+    local args = {
+        query = { name = "Search", type = "input", width = 2.0, order = 1,
+            desc = "Type part of a setting's name, like |cffffffffxp|r, |cfffffffffont|r or |cfffffffffade|r, and press Enter.",
+            get = function() return searchText end,
+            set = function(_, value)
+                searchText = (value or ""):match("^%s*(.-)%s*$");
+                LibStub("AceConfigRegistry-3.0"):NotifyChange("JTS_QuestTracker");
+            end },
+        clear = { name = "Clear", type = "execute", width = 0.5, order = 2,
+            hidden = function() return searchText == "" end,
+            func = function()
+                searchText = "";
+                LibStub("AceConfigRegistry-3.0"):NotifyChange("JTS_QuestTracker");
+            end },
+    };
+
+    local query = searchText:lower():gsub("colour", "color");
+    if query == "" then
+        args.hint = { name = "\nFind any setting by name. Type a word above and press Enter: every matching setting shows up here and works just like it does in its own place.",
+            type = "description", fontSize = "medium", order = 3 };
+        return Category("Search", 0, args);
+    end
+
+    local found = {};
+    local base = withInherited({}, root);
+    for _, key in ipairs(sortedKeys(categories)) do
+        local category = categories[key];
+        if type(category) == "table" and category.type == "group" and key ~= "profiles" then
+            collect(category, query, type(category.name) == "string" and category.name or key,
+                withInherited(base, category), textOf(category.name) == query, found);
+        end
+    end
+
+    if #found == 0 then
+        args.none = { name = "\nNo settings match |cffffffff" .. searchText .. "|r.", type = "description", fontSize = "medium", order = 3 };
+        return Category("Search", 0, args);
+    end
+
+    -- One box per place the results come from, in the order they appear in the settings.
+    local groups, order = {}, 10;
+    for _, result in ipairs(found) do
+        local box = groups[result.path];
+        if not box then
+            order = order + 1;
+            box = { name = result.path, type = "group", inline = true, order = order, args = {} };
+            groups[result.path] = box;
+            args["r" .. order] = box;
+        end
+        box.args[result.key] = result.option;
+    end
+
+    if #found >= MAX_RESULTS then
+        args.more = { name = "|cff999999Showing the first " .. MAX_RESULTS .. " matches. Type more of the name to narrow it down.|r",
+            type = "description", order = 1000 };
+    end
+
+    return Category("Search", 0, args);
+end
+
 LibStub("AceConfig-3.0"):RegisterOptionsTable("JTS_QuestTracker", function()
     local options = {
         name = function() return JQTL:GetString('SETTINGS_NAME', ns.CONSTANTS.VERSION) end,
@@ -599,9 +761,10 @@ LibStub("AceConfig-3.0"):RegisterOptionsTable("JTS_QuestTracker", function()
         set = SetInDB,
 
         args = {
+            general = generalCategory(),
             tracking = trackingCategory(),
+            questing = questingCategory(),
             appearance = appearanceCategory(),
-            colorBlind = colorBlindCategory(),
             alerts = alertsCategory(),
             window = windowCategory(),
             advanced = advancedCategory(),
@@ -615,6 +778,9 @@ LibStub("AceConfig-3.0"):RegisterOptionsTable("JTS_QuestTracker", function()
             options.args[key] = tab;
         end
     end
+
+    local ok, search = pcall(searchCategory, options, options.args);
+    if ok then options.args.search = search else JQT:LogError("Settings search:", search) end
 
     return options;
 end);

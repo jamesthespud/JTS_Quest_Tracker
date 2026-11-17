@@ -5,7 +5,9 @@ local _, ns = ...
 
       TomTom   "TomTom Waypoint" in a quest's right-click menu, and optionally a waypoint every time
                you focus a quest. The location comes from WoW's own quest helper
-               (C_QuestLog.GetNextWaypoint), the same place the built-in quest arrow points.
+               (C_QuestLog.GetNextWaypoint), the same place the built-in quest arrow points. When WoW
+               has none and Questie is installed, Questie's nearest spot for the quest is used (2.2,
+               idea from Waltrapalo's fork).
       Masque   the quest item buttons join a Masque group ("JTS Quest Tracker" > "Quest Items"), so
                they can wear the same skin as your action bars.
 ]]
@@ -36,12 +38,43 @@ local function questLocation(questID)
     if not api then return nil end
 
     local ok, mapID, x, y = pcall(api, questID);
-    if not ok or not mapID or not x or not y then return nil end
-
-    local okNumbers = pcall(function() return mapID > 0 and x >= 0 and y >= 0 end);
-    if not okNumbers then return nil end
+    if not ok then return nil end
 
     return mapID, x, y;
+end
+
+local function validLocation(mapID, x, y)
+    return type(mapID) == "number" and mapID > 0
+        and type(x) == "number" and x >= 0 and x <= 1
+        and type(y) == "number" and y >= 0 and y <= 1;
+end
+
+-- Questie's nearest spot for the quest (only while Questie is loaded). Uses Questie at run time
+-- through its own modules; nothing of Questie's is copied here. Any change on Questie's side just
+-- means no location, never an error.
+local function questieLocation(questID)
+    local loader = _G.QuestieLoader;
+    if type(loader) ~= "table" or type(loader.ImportModule) ~= "function" then return nil end
+
+    local eligibility = loader:ImportModule("TrackerMapEligibility");
+    local quest, capabilities = eligibility.RefreshAndGetCapabilities(questID);
+    if not capabilities or not capabilities.canNavigateQuest then return nil end
+
+    local spawn, areaID = loader:ImportModule("DistanceUtils").GetNearestSpawnForQuest(quest);
+    if not spawn or not areaID then return nil end
+
+    local mapID = loader:ImportModule("ZoneDB"):GetUiMapIdByAreaId(areaID);
+    return mapID, spawn[1] / 100, spawn[2] / 100;
+end
+
+-- mapID, x, y from WoW, or else from Questie; nil when neither knows.
+local function findLocation(questID)
+    local mapID, x, y = questLocation(questID);
+    if validLocation(mapID, x, y) then return mapID, x, y end
+
+    local ok;
+    ok, mapID, x, y = pcall(questieLocation, questID);
+    if ok and validLocation(mapID, x, y) then return mapID, x, y end
 end
 
 local waypoint; -- the one waypoint we keep (a new one replaces it)
@@ -50,9 +83,9 @@ function JQT:SetTomTomWaypoint(quest, quiet)
     local addon = tomtom();
     if not addon or not quest then return false end
 
-    local mapID, x, y = questLocation(quest.questID);
+    local mapID, x, y = findLocation(quest.questID);
     if not mapID then
-        if not quiet then say("WoW has no location for " .. tostring(quest.title) .. " right now, so there's nothing to point TomTom at.") end
+        if not quiet then say("Neither WoW nor Questie has a location for " .. tostring(quest.title) .. " right now, so there's nothing to point TomTom at.") end
         return false;
     end
 

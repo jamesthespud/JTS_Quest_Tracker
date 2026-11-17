@@ -269,15 +269,50 @@ local FEATURES = {
     -- 2.1.0
     {
         title = "Fade When Idle", group = "Tracker", added = "2.1.0",
-        text = "The tracker fades while your mouse isn't over it and comes straight back when you point at it. Set how faint in Frame Settings > Visibility.",
+        text = "The tracker fades while your mouse isn't over it and comes straight back when you point at it. Set how faint in Window > Visibility.",
         get = function() return p().FadeWhenIdle == true end,
         set = function(v) p().FadeWhenIdle = v; JTS_QuestTracker:UpdateIdleFade() end
+    },
+
+    -- 2.2.0 (ideas from Waltrapalo's fork)
+    {
+        title = "Minimal Skin", group = "Tracker", added = "2.2.0", newOnly = true,
+        text = "A faint panel and plain text, with no badges or pills. Untick to go back to Modern.",
+        get = function() return p().Skin == "Minimal" end,
+        set = function(v)
+            if v then
+                if p().Skin ~= "Minimal" then p().SkinBeforeMinimal = p().Skin end
+                p().Skin = "Minimal";
+            else
+                p().Skin = p().SkinBeforeMinimal or "Modern";
+            end
+            if JQT.ApplySkin then JQT:ApplySkin() end
+        end
+    },
+    {
+        title = "Ready Quests in Their Own Section", group = "Questing", added = "2.2.0",
+        text = "Quests you can hand in sit together above the zones, in a section you can fold (Tracking > Sorting).",
+        get = function() return p().TurnInPlacement == "Section" end,
+        set = function(v) p().TurnInPlacement = v and "Section" or "Normal"; refresh() end
+    },
+    {
+        title = "Turned In Today", group = "Questing", added = "2.2.0",
+        text = "A foldable list at the bottom of the tracker of the quests you handed in today, with the time.",
+        get = function() return p().ShowTurnedInToday == true end,
+        set = function(v) p().ShowTurnedInToday = v; refresh() end
+    },
+    {
+        title = "Move It in Edit Mode", group = "Tracker", added = "2.2.0",
+        text = "In WoW's Edit Mode (Esc > Edit Mode), drag the tracker's blue box to move it, or its corner to resize it.",
+        get = function() return p().ShowInEditMode ~= false end,
+        set = function(v) p().ShowInEditMode = v end
     },
 };
 
 -- Extra lines for the "New in" page, per version (things without an on/off switch).
 local NEW_NOTES = {
-    ["2.1.0"] = "|cffffd100Also new:|r a Tracker Scale slider (Frame Settings > Position & Size)  ·  rested XP shows as a faint band on the XP bar  ·  hover the header for this session's quests, XP per hour and time to level",
+    ["2.2.0"] = "|cffffd100Also new:|r the settings have a |cffffffffSearch|r page and a tidier layout (General, Tracking, Questing, Appearance, Alerts & Group, Window)  ·  TomTom waypoints use Questie's location when WoW has none  ·  Thanks to Waltrapalo for the ideas",
+    ["2.1.0"] = "|cffffd100Also new:|r a Tracker Scale slider (Window > Position & Size)  ·  rested XP shows as a faint band on the XP bar  ·  hover the header for this session's quests, XP per hour and time to level",
     ["2.0.6"] = "|cffffd100Also new:|r in the Modern skin, objectives follow your objective colour and Colour by Progress (Appearance > Objectives)",
     ["2.0.5"] = "|cffffd100Also new:|r more room above and below quest names so they aren't cut off (Appearance > Quest Names > Space Around Quest Names; 0 is the old look)",
     ["2.0.0"] = "|cffffd100Also new:|r bind a key to |cffffffffUse Quest Item|r (Key Bindings > AddOns > JTS Quest Tracker): it uses the focused or closest quest's item  ·  Safe to try: everything here can be turned off again",
@@ -782,7 +817,7 @@ hooksecurefunc(JQT, "Initialize", function(self)
     end);
 end);
 
--- Advanced > Welcome Screen
+-- General > Welcome Screen
 JQT.welcomeOptions = function()
     return {
         name = "Show Welcome Screen", type = "execute", width = 1.2,

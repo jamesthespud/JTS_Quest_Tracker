@@ -51,7 +51,7 @@ events:SetScript("OnEvent", function()
 end);
 
 -- ---------------------------------------------------------------------------
--- Option (Frame Settings > Visibility)
+-- Option (Window > Visibility)
 -- ---------------------------------------------------------------------------
 
 JQT.mapQuestLogOptions = function()
